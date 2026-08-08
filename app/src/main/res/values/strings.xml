@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">حصّن</string>
+
+    <!-- Accessibility Service -->
+    <string name="accessibility_service_description">حصّن يراقب التطبيقات التي تفتحها. عند فتح ريديت في التصفح المجهول أو التصفح الخفي في كروم/بريف أو أي تطبيقات تختارها، يقوم بتحويلك فوراً إلى تطبيق مفيد من اختيارك — لمساعدتك على التركيز. لا يتم جمع أي بيانات، وكل المعالجة تتم على جهازك.</string>
+
+    <!-- Main Screen -->
+    <string name="monitoring_enabled">الحماية مفعّلة</string>
+    <string name="monitoring_disabled">الحماية متوقفة</string>
+    <string name="monitoring_subtitle">إعادة توجيه تلقائية عند فتح التطبيقات المحددة</string>
+    <string name="select_destination">اختر تطبيق الوجهة</string>
+    <string name="no_app_selected">لم يتم اختيار تطبيق</string>
+    <string name="open_accessibility_settings">افتح إعدادات إمكانية الوصول</string>
+    <string name="accessibility_not_enabled">خدمة إمكانية الوصول غير مفعّلة. اضغط لفتح الإعدادات.</string>
+    <string name="accessibility_enabled">خدمة إمكانية الوصول مفعّلة — الحماية تعمل</string>
+
+    <!-- Destination picker -->
+    <string name="choose_destination">اختر تطبيق الوجهة</string>
+    <string name="choose_monitored">اختر التطبيقات المراقبة</string>
+    <string name="search_apps">ابحث في التطبيقات المثبتة…</string>
+    <string name="no_apps_found">لا توجد تطبيقات</string>
+    <string name="search_hint">بحث…</string>
+    <string name="done">تم</string>
+    <string name="cancel">إلغاء</string>
+    <string name="save">حفظ</string>
+    <string name="close">إغلاق</string>
+    <string name="settings">الإعدادات</string>
+    <string name="language">اللغة</string>
+    <string name="arabic">العربية</string>
+    <string name="english">English</string>
+
+    <!-- Monitored apps -->
+    <string name="monitored_apps_title">التطبيقات المراقبة</string>
+    <string name="monitored_apps_subtitle">اختر أي تطبيقات تريد أن يتم تحويلك منها تلقائياً</string>
+    <string name="add_apps">إضافة تطبيقات</string>
+    <string name="edit_apps">تعديل التطبيقات</string>
+    <string name="no_monitored_apps">لم تختر أي تطبيقات بعد. اضغط إضافة لاختيار التطبيقات التي تشتتك.</string>
+    <string name="reddit_trigger">ريديت — التحويل فقط في التصفح المجهول</string>
+    <string name="chrome_trigger">كروم — التحويل فقط في وضع التصفح الخفي</string>
+    <string name="brave_trigger">بريف — التحويل فقط في الوضع الخاص</string>
+    <string name="custom_apps_label">تطبيقات مخصصة</string>
+    <string name="tap_to_change">اضغط للتغيير</string>
+    <string name="redirect_mode">وضع التحويل</string>
+    <string name="mode_always">دائماً — عند فتح التطبيق</string>
+    <string name="mode_private_only">فقط في الوضع الخاص/الخفي</string>
+    <string name="mode_always_desc">يتم التحويل فور فتح التطبيق</string>
+    <string name="mode_private_desc">يتم التحويل فقط عند اكتشاف كلمات مثل \"خفي\" أو \"خاص\"</string>
+
+    <!-- Destination -->
+    <string name="destination_title">تطبيق الوجهة</string>
+    <string name="destination_subtitle">سيتم نقلك إلى هذا التطبيق بدلاً من التطبيق المشتت</string>
+    <string name="suggested_apps">تطبيقات مقترحة</string>
+    <string name="all_apps">كل التطبيقات</string>
+
+    <!-- How it works -->
+    <string name="how_it_works">كيف يعمل؟</string>
+    <string name="how_it_works_desc">عند فتح أي تطبيق مراقب، يضغط التطبيق زر الرئيسية وينقلك فوراً إلى تطبيق الوجهة الذي اخترته.</string>
+
+    <!-- Challenge -->
+    <string name="challenge_title">تحدي الإيقاف</string>
+    <string name="challenge_subtitle">لإيقاف الحماية يجب إكمال التحديات التالية</string>
+    <string name="give_up">استسلام</string>
+    <string name="keep_going">متابعة</string>
+    <string name="cooldown_title">فترة انتظار</string>
+    <string name="cooldown_desc">انسحبت سابقاً. خذ استراحة وحاول مرة أخرى لاحقاً.</string>
+
+    <!-- General -->
+    <string name="on">مفعّل</string>
+    <string name="off">متوقف</string>
+    <string name="enabled">مفعّل</string>
+    <string name="disabled">متوقف</string>
+</resources>
