@@ -12,16 +12,13 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+      - uses: android-actions/setup-android@v3
       - run: chmod +x gradlew
       - run: |
           keytool -genkey -v -keystore release.keystore -alias hassn -keyalg RSA -keysize 2048 -validity 10000 -storepass hassn123 -keypass hassn123 -dname "CN=Hassn,OU=Dev,O=Hassn,L=Cairo,C=EG"
-      - name: Build Debug
-        run: ./gradlew assembleDebug --stacktrace --info
-      - name: Build Release
-        if: success()
-        run: ./gradlew assembleRelease --stacktrace -Prelease.storeFile=release.keystore -Prelease.storePassword=hassn123 -Prelease.keyAlias=hassn -Prelease.keyPassword=hassn123
+      - run: ./gradlew assembleDebug --stacktrace
+      - run: ./gradlew assembleRelease --stacktrace -Prelease.storeFile=release.keystore -Prelease.storePassword=hassn123 -Prelease.keyAlias=hassn -Prelease.keyPassword=hassn123
       - uses: actions/upload-artifact@v4
-        if: success()
         with:
           name: Hassn-APKs
           path: |
