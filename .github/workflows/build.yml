@@ -1,77 +1,27 @@
 name: Build APKs
-
 on:
   push:
     branches: [main]
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-<<<<<<< HEAD
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Make gradlew executable
-        run: chmod +x gradlew
-
-      - name: Generate keystore
-        run: |
-          keytool -genkey -v \
-            -keystore release.keystore \
-            -alias hassn \
-            -keyalg RSA -keysize 2048 -validity 10000 \
-            -storepass hassn123 \
-            -keypass hassn123 \
-            -dname "CN=Hassn,OU=Dev,O=Hassn,L=Cairo,C=EG"
-
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
-
-      - name: Build Release APK
-        run: ./gradlew assembleRelease --stacktrace -Prelease.storeFile=release.keystore -Prelease.storePassword=hassn123 -Prelease.keyAlias=hassn -Prelease.keyPassword=hassn123
-
-      - name: Upload APKs
-=======
       - uses: android-actions/setup-android@v3
       - run: chmod +x gradlew
       - run: |
           keytool -genkey -v -keystore release.keystore -alias hassn -keyalg RSA -keysize 2048 -validity 10000 -storepass hassn123 -keypass hassn123 -dname "CN=Hassn,OU=Dev,O=Hassn,L=Cairo,C=EG"
-
-      - name: Build Debug (with log capture)
-        run: ./gradlew assembleDebug --stacktrace --info 2>&1 | tee build.log; echo "EXIT_CODE=${PIPESTATUS[0]}" >> build.log; cat build.log | tail -n 300
-
-      - name: Upload build log (even on failure)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log
-          path: build.log
-
-      - name: Build Release
-        if: success()
-        run: ./gradlew assembleRelease --stacktrace -Prelease.storeFile=release.keystore -Prelease.storePassword=hassn123 -Prelease.keyAlias=hassn -Prelease.keyPassword=hassn123
-
-      - name: Upload APKs
-        if: success()
->>>>>>> df7bb38f2a2b6107a88da1a7e94d5502db8aa87f
-        uses: actions/upload-artifact@v4
+      - run: ./gradlew assembleDebug --stacktrace
+      - run: ./gradlew assembleRelease --stacktrace -Prelease.storeFile=release.keystore -Prelease.storePassword=hassn123 -Prelease.keyAlias=hassn -Prelease.keyPassword=hassn123
+      - uses: actions/upload-artifact@v4
         with:
           name: Hassn-APKs
           path: |
             app/build/outputs/apk/debug/*.apk
             app/build/outputs/apk/release/*.apk
-<<<<<<< HEAD
           if-no-files-found: error
-=======
->>>>>>> df7bb38f2a2b6107a88da1a7e94d5502db8aa87f
