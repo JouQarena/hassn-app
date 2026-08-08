@@ -1,29 +1,50 @@
 name: Build APKs
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-      - run: chmod +x gradlew
-      - run: |
-          keytool -genkey -v -keystore release.keystore -alias hassn -keyalg RSA -keysize 2048 -validity 10000 -storepass hassn123 -keypass hassn123 -dname "CN=Hassn,OU=Dev,O=Hassn,L=Cairo,C=EG"
-      - name: Build Debug
-        run: ./gradlew assembleDebug --stacktrace --info
-      - name: Build Release
-        if: success()
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Generate keystore
+        run: |
+          keytool -genkey -v \
+            -keystore release.keystore \
+            -alias hassn \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass hassn123 \
+            -keypass hassn123 \
+            -dname "CN=Hassn,OU=Dev,O=Hassn,L=Cairo,C=EG"
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Build Release APK
         run: ./gradlew assembleRelease --stacktrace -Prelease.storeFile=release.keystore -Prelease.storePassword=hassn123 -Prelease.keyAlias=hassn -Prelease.keyPassword=hassn123
-      - uses: actions/upload-artifact@v4
-        if: success()
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@v4
         with:
           name: Hassn-APKs
           path: |
             app/build/outputs/apk/debug/*.apk
             app/build/outputs/apk/release/*.apk
+          if-no-files-found: error

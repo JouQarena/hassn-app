@@ -312,9 +312,10 @@ private fun ChallengeBody(
                     label = "activity-swap"
                 ) { currentActivity ->
                     if (currentActivity != null) {
-                        currentActivity.Render(modifier = Modifier, 
+                        currentActivity.Render(
                             onDone = onActivityDone,
-                            onFail = onActivityFail
+                            onFail = onActivityFail,
+                            modifier = Modifier
                         )
                     } else {
                         Text("أحسنت — يمكنك الآن إيقاف الحماية.")

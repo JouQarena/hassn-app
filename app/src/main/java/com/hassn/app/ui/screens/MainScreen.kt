@@ -322,8 +322,8 @@ private fun AppPickerOverlaySingle(apps: List<AppInfo>, selectedPackage: String?
                                 Icon(if(sel) Icons.Outlined.RadioButtonChecked else Icons.Outlined.RadioButtonUnchecked, null, tint = if(sel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier=Modifier.size(24.dp))
                                 Spacer(Modifier.width(12.dp))
                                 Column(Modifier.weight(1f), horizontalAlignment = if(layoutDirection==LayoutDirection.Rtl) Alignment.End else Alignment.Start) {
-                                    Text(safeLabel(app), style=MaterialTheme.typography.bodyLarge, fontWeight=if(sel) FontWeight.SemiBold else FontWeight.Normal, textDirection= TextDirection.Content, maxLines=2)
-                                    Text(app.packageName, style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant, textDirection= TextDirection.Content, maxLines=1)
+                                    Text(safeLabel(app), style=MaterialTheme.typography.bodyLarge, fontWeight=if(sel) FontWeight.SemiBold else FontWeight.Normal, maxLines=2)
+                                    Text(app.packageName, style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant, maxLines=1)
                                 }
                             }
                         }
@@ -365,8 +365,8 @@ private fun AppPickerOverlayMulti(apps: List<AppInfo>, alreadySelected: Set<Stri
                                 Checkbox(checked = sel, onCheckedChange = { checked -> selected = if(checked) selected + app.packageName else selected - app.packageName })
                                 Spacer(Modifier.width(8.dp))
                                 Column(Modifier.weight(1f)) {
-                                    Text(safeLabel(app), style=MaterialTheme.typography.bodyMedium, fontWeight=if(sel) FontWeight.SemiBold else FontWeight.Normal, textDirection= TextDirection.Content, maxLines=2)
-                                    Text(app.packageName, style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant, textDirection= TextDirection.Content, maxLines=1)
+                                    Text(safeLabel(app), style=MaterialTheme.typography.bodyMedium, fontWeight=if(sel) FontWeight.SemiBold else FontWeight.Normal, maxLines=2)
+                                    Text(app.packageName, style=MaterialTheme.typography.bodySmall, color=MaterialTheme.colorScheme.onSurfaceVariant, maxLines=1)
                                 }
                             }
                         }
