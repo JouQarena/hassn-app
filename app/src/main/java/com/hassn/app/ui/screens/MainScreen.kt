@@ -23,7 +23,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.TextDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -166,8 +165,8 @@ private fun MonitoringCardAr(enabled: Boolean, isArabic: Boolean, onToggleOff: (
             Icon(Icons.Default.Shield, null, tint = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(32.dp))
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
-                Text(if (enabled) if (isArabic) "الحماية مفعّلة" else "Protection ON" else if (isArabic) "الحماية متوقفة" else "Protection OFF", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, textDirection = TextDirection.Content)
-                Text(if (isArabic) "إعادة توجيه تلقائية عند فتح التطبيقات المراقبة" else "Auto-redirect when monitored apps open", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textDirection = TextDirection.Content)
+                Text(if (enabled) if (isArabic) "الحماية مفعّلة" else "Protection ON" else if (isArabic) "الحماية متوقفة" else "Protection OFF", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Text(if (isArabic) "إعادة توجيه تلقائية عند فتح التطبيقات المراقبة" else "Auto-redirect when monitored apps open", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Switch(checked = enabled, onCheckedChange = { want -> if (want) onToggleOn() else onToggleOff() })
         }
@@ -181,9 +180,9 @@ private fun DestinationCardAr(targetApp: AppInfo?, isArabic: Boolean, onClick: (
             Icon(Icons.Default.Apps, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp))
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
-                Text(if (isArabic) "تطبيق الوجهة" else "Destination", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, textDirection = TextDirection.Content)
-                Text(text = targetApp?.let { safeLabel(it) } ?: if (isArabic) "اضغط لاختيار التطبيق" else "Tap to choose", style = MaterialTheme.typography.bodyMedium, color = if (targetApp!=null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, textDirection = TextDirection.Content, maxLines = 2)
-                Text(if (isArabic) "سيتم نقلك إليه بدلاً من التطبيق المشتت" else "You will be redirected here", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textDirection = TextDirection.Content)
+                Text(if (isArabic) "تطبيق الوجهة" else "Destination", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Text(text = targetApp?.let { safeLabel(it) } ?: if (isArabic) "اضغط لاختيار التطبيق" else "Tap to choose", style = MaterialTheme.typography.bodyMedium, color = if (targetApp!=null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
+                Text(if (isArabic) "سيتم نقلك إليه بدلاً من التطبيق المشتت" else "You will be redirected here", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Icon(Icons.Default.Search, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
@@ -196,8 +195,8 @@ private fun MonitoredAppsCardAr(monitoredApps: List<MonitoredApp>, isArabic: Boo
         Column(Modifier.padding(20.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text(if (isArabic) "التطبيقات المراقبة" else "Monitored Apps", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, textDirection = TextDirection.Content)
-                    Text(if (isArabic) "اختر أي تطبيقات تريد الحماية منها" else "Choose apps to redirect from", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textDirection = TextDirection.Content)
+                    Text(if (isArabic) "التطبيقات المراقبة" else "Monitored Apps", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Text(if (isArabic) "اختر أي تطبيقات تريد الحماية منها" else "Choose apps to redirect from", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 FilledTonalButton(onClick = onAdd, contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
                     Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
@@ -211,8 +210,8 @@ private fun MonitoredAppsCardAr(monitoredApps: List<MonitoredApp>, isArabic: Boo
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Default.Block, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(Modifier.height(6.dp))
-                        Text(if (isArabic) "لم تختر أي تطبيقات بعد" else "No apps selected yet", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, textDirection = TextDirection.Content)
-                        Text(if (isArabic) "اضغط إضافة لاختيار التطبيقات التي تشتتك" else "Tap Add to choose distracting apps", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, textDirection = TextDirection.Content)
+                        Text(if (isArabic) "لم تختر أي تطبيقات بعد" else "No apps selected yet", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+                        Text(if (isArabic) "اضغط إضافة لاختيار التطبيقات التي تشتتك" else "Tap Add to choose distracting apps", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
                     }
                 }
             } else {
@@ -233,8 +232,8 @@ private fun MonitoredAppRow(app: MonitoredApp, isArabic: Boolean, onRemove: ()->
             Icon(Icons.Default.PhoneAndroid, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
-                Text(app.label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, textDirection = TextDirection.Content, maxLines = 1)
-                Text(app.packageName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textDirection = TextDirection.Content, maxLines = 1)
+                Text(app.label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                Text(app.packageName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                 Spacer(Modifier.height(4.dp))
                 AssistChip(onClick = onChangeMode, label = { Text(if (app.isAlways) if (isArabic) "دائماً" else "Always" else if (isArabic) "خاص فقط" else "Private only", style = MaterialTheme.typography.labelSmall) }, leadingIcon = { Icon(if (app.isAlways) Icons.Default.Bolt else Icons.Default.VisibilityOff, null, modifier = Modifier.size(16.dp)) })
             }
@@ -250,8 +249,8 @@ private fun HowItWorksCard(isArabic: Boolean) {
             Icon(Icons.Default.Info, null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
             Spacer(Modifier.width(10.dp))
             Column {
-                Text(if (isArabic) "كيف يعمل؟" else "How it works?", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, textDirection = TextDirection.Content)
-                Text(if (isArabic) "عند فتح تطبيق مراقب يتم الضغط على زر الرئيسية ونقلك فوراً للوجهة." else "When a monitored app opens, Hassn presses Home and launches your destination.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSecondaryContainer, textDirection = TextDirection.Content)
+                Text(if (isArabic) "كيف يعمل؟" else "How it works?", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                Text(if (isArabic) "عند فتح تطبيق مراقب يتم الضغط على زر الرئيسية ونقلك فوراً للوجهة." else "When a monitored app opens, Hassn presses Home and launches your destination.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSecondaryContainer)
             }
         }
     }
@@ -264,7 +263,7 @@ private fun AccessibilityStatusCardAr(context: Context, isArabic: Boolean) {
         Row(Modifier.fillMaxWidth().padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.Settings, null, tint = if (isEnabled) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onErrorContainer, modifier = Modifier.size(28.dp))
             Spacer(Modifier.width(14.dp))
-            Text(if (isEnabled) if (isArabic) "خدمة إمكانية الوصول مفعّلة — الحماية تعمل" else "Accessibility enabled — protection active" else if (isArabic) "إمكانية الوصول غير مفعّلة — اضغط هنا" else "Accessibility NOT enabled — tap here", style = MaterialTheme.typography.bodyMedium, color = if (isEnabled) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onErrorContainer, modifier = Modifier.weight(1f), textDirection = TextDirection.Content)
+            Text(if (isEnabled) if (isArabic) "خدمة إمكانية الوصول مفعّلة — الحماية تعمل" else "Accessibility enabled — protection active" else if (isArabic) "إمكانية الوصول غير مفعّلة — اضغط هنا" else "Accessibility NOT enabled — tap here", style = MaterialTheme.typography.bodyMedium, color = if (isEnabled) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onErrorContainer, modifier = Modifier.weight(1f))
         }
     }
 }
@@ -273,10 +272,10 @@ private fun AccessibilityStatusCardAr(context: Context, isArabic: Boolean) {
 private fun ModeChooserDialog(app: MonitoredApp, isArabic: Boolean, onChoose: (String)->Unit, onDismiss: ()->Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (isArabic) "وضع التحويل — ${app.label}" else "Redirect mode — ${app.label}", textDirection = TextDirection.Content) },
+        title = { Text(if (isArabic) "وضع التحويل — ${app.label}" else "Redirect mode — ${app.label}") },
         text = {
             Column {
-                Text(if (isArabic) "اختر متى يتم التحويل:" else "Choose when to redirect:", textDirection = TextDirection.Content)
+                Text(if (isArabic) "اختر متى يتم التحويل:" else "Choose when to redirect:")
                 Spacer(Modifier.height(12.dp))
                 Card(Modifier.fillMaxWidth().clickable { onChoose(Constants.MODE_ALWAYS) }, colors = CardDefaults.cardColors(containerColor = if (app.isAlways) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant)) {
                     Column(Modifier.padding(12.dp)) {
@@ -308,10 +307,10 @@ private fun AppPickerOverlaySingle(apps: List<AppInfo>, selectedPackage: String?
         Surface(Modifier.fillMaxWidth(0.94f).fillMaxHeight(0.82f).clip(RoundedCornerShape(28.dp)), shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surface, tonalElevation = 6.dp) {
             Column(Modifier.padding(20.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text(if (isArabic) "اختر تطبيق الوجهة" else "Choose Destination", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, textDirection = TextDirection.Content)
+                    Text(if (isArabic) "اختر تطبيق الوجهة" else "Choose Destination", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                     TextButton(onClick = onDismiss) { Text(if (isArabic) "إلغاء" else "Cancel") }
                 }
-                OutlinedTextField(value = query, onValueChange = { query = if (it.length>80) it.take(80) else it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text(if (isArabic) "ابحث..." else "Search...", textDirection = TextDirection.Content) }, leadingIcon = { Icon(Icons.Default.Search, null) }, singleLine = true, keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search))
+                OutlinedTextField(value = query, onValueChange = { query = if (it.length>80) it.take(80) else it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text(if (isArabic) "ابحث..." else "Search...") }, leadingIcon = { Icon(Icons.Default.Search, null) }, singleLine = true, keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search))
                 Spacer(Modifier.height(12.dp))
                 when {
                     apps.isEmpty() -> Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
@@ -347,18 +346,18 @@ private fun AppPickerOverlayMulti(apps: List<AppInfo>, alreadySelected: Set<Stri
             Column(Modifier.padding(20.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Column {
-                        Text(if (isArabic) "اختر التطبيقات المراقبة" else "Choose Monitored Apps", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, textDirection = TextDirection.Content)
-                        Text(if (isArabic) "يمكنك اختيار أكثر من تطبيق" else "You can select multiple", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textDirection = TextDirection.Content)
+                        Text(if (isArabic) "اختر التطبيقات المراقبة" else "Choose Monitored Apps", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                        Text(if (isArabic) "يمكنك اختيار أكثر من تطبيق" else "You can select multiple", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     TextButton(onClick = onDismiss) { Text(if (isArabic) "إلغاء" else "Cancel") }
                 }
-                OutlinedTextField(value = query, onValueChange = { query = if (it.length>80) it.take(80) else it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text(if (isArabic) "ابحث..." else "Search...", textDirection = TextDirection.Content) }, leadingIcon = { Icon(Icons.Default.Search, null) }, singleLine = true, keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search))
+                OutlinedTextField(value = query, onValueChange = { query = if (it.length>80) it.take(80) else it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text(if (isArabic) "ابحث..." else "Search...") }, leadingIcon = { Icon(Icons.Default.Search, null) }, singleLine = true, keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search))
                 Spacer(Modifier.height(8.dp))
                 Text(if (isArabic) "المحدد: ${selected.size}" else "Selected: ${selected.size}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.height(8.dp))
                 when {
                     apps.isEmpty() -> Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-                    available.isEmpty() -> Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) { Text(if (isArabic) "لا توجد تطبيقات متاحة" else "No available apps", color = MaterialTheme.colorScheme.onSurfaceVariant, textDirection = TextDirection.Content) }
+                    available.isEmpty() -> Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) { Text(if (isArabic) "لا توجد تطبيقات متاحة" else "No available apps", color = MaterialTheme.colorScheme.onSurfaceVariant) }
                     else -> LazyColumn(Modifier.weight(1f)) {
                         items(available, key={it.packageName}) { app ->
                             val sel = selected.contains(app.packageName)

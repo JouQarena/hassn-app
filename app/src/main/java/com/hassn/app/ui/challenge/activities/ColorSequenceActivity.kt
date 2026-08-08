@@ -87,7 +87,7 @@ class ColorSequenceActivity(
             phase = Phase.WAIT
         }
 
-        val onTileTap: (Int) -> Unit = { idx ->
+        val onTileTap: (Int) -> Unit = onTileTap@ { idx ->
             if (phase != Phase.WAIT) return@onTileTap
             if (idx == sequence[userIndex]) {
                 val next = userIndex + 1

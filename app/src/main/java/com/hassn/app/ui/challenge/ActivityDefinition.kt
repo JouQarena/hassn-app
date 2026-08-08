@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
  *   • The composable blocks for a real-world duration or sensor input
  *     that the user cannot fake in a couple of seconds.
  */
-sealed class ActivityDefinition {
+abstract class ActivityDefinition {
 
     abstract val key: String
     abstract val title: String
@@ -32,7 +32,7 @@ sealed class ActivityDefinition {
     abstract fun Render(
         onDone: () -> Unit,
         onFail: () -> Unit,
-        modifier: Modifier = Modifier
+        modifier: Modifier
     )
 }
 

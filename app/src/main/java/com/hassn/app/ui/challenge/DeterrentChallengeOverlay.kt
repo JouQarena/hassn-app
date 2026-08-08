@@ -312,7 +312,7 @@ private fun ChallengeBody(
                     label = "activity-swap"
                 ) { currentActivity ->
                     if (currentActivity != null) {
-                        currentActivity.Render(
+                        currentActivity.Render(modifier = Modifier, 
                             onDone = onActivityDone,
                             onFail = onActivityFail
                         )
