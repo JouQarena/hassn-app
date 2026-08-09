@@ -22,7 +22,7 @@ object Constants {
     )
     val REDDIT_ANONYMOUS_KEYWORDS = listOf(
         "anonymous browsing", "browse anonymously",
-        "stop anonymous browsing", "anonymous", "anonymous mode",
+        "stop anonymous browsing", "anonymous mode",
         "التصفح المجهول", "مجهول"
     )
     val GENERIC_PRIVATE_KEYWORDS = listOf(

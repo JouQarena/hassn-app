@@ -55,7 +55,6 @@ import com.hassn.app.ui.challenge.activities.BreathHoldActivity
 import com.hassn.app.ui.challenge.activities.ColorSequenceActivity
 import com.hassn.app.ui.challenge.activities.HoldStillActivity
 import com.hassn.app.ui.challenge.activities.MathChainActivity
-import com.hassn.app.ui.challenge.activities.MorseCodeActivity
 import com.hassn.app.ui.challenge.activities.PullupActivity
 import com.hassn.app.ui.challenge.activities.PushupActivity
 import com.hassn.app.ui.challenge.activities.TypingTestActivity
@@ -392,7 +391,6 @@ private fun buildQueue(size: Int): List<ActivityDefinition> {
         "typing"       to { TypingTestActivity() },
         "math_chain"   to { MathChainActivity(chainLength = Random.nextInt(3, 5)) },
         "color_seq"    to { ColorSequenceActivity(startLength = 4, targetLength = Random.nextInt(6, 8)) },
-        "morse"        to { MorseCodeActivity() }
     )
     val out = mutableListOf<ActivityDefinition>()
     var lastKey: String? = null
