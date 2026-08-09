@@ -258,7 +258,8 @@ private fun HowItWorksCard(isArabic: Boolean) {
 
 @Composable
 private fun AccessibilityStatusCardAr(context: Context, isArabic: Boolean) {
-    val isEnabled = remember { isAccessibilityEnabled(context) }
+    var isEnabled by remember { mutableStateOf(isAccessibilityEnabled(context)) }
+    LaunchedEffect(Unit) { while(true){ kotlinx.coroutines.delay(800); try{ isEnabled=isAccessibilityEnabled(context)}catch(_:Throwable){} } }
     Card(Modifier.fillMaxWidth().clickable { try { context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) } catch (_:Exception){} }, colors = CardDefaults.cardColors(containerColor = if (isEnabled) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.errorContainer)) {
         Row(Modifier.fillMaxWidth().padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.Settings, null, tint = if (isEnabled) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onErrorContainer, modifier = Modifier.size(28.dp))
@@ -301,7 +302,7 @@ private fun ModeChooserDialog(app: MonitoredApp, isArabic: Boolean, onChoose: (S
 @Composable
 private fun AppPickerOverlaySingle(apps: List<AppInfo>, selectedPackage: String?, isArabic: Boolean, onSelect: (AppInfo)->Unit, onDismiss: ()->Unit) {
     var query by remember { mutableStateOf("") }
-    val filtered = if (query.isBlank()) apps else apps.filter { safeContains(it.label, query) || safeContains(it.packageName, query) }
+    val filtered by remember(query, apps) { derivedStateOf { try { if (query.isBlank()) apps else { val q=query.trim(); if(q.isEmpty()) apps else apps.filter { try { safeContains(it.label,q) || safeContains(it.packageName,q) } catch(_:Throwable){false} } } } catch(_:Throwable){apps} } }
     val layoutDirection = LocalLayoutDirection.current
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.scrim.copy(0.5f)).clickable(MutableInteractionSource(), null, onClick = onDismiss), contentAlignment = Alignment.Center) {
         Surface(Modifier.fillMaxWidth(0.94f).fillMaxHeight(0.82f).clip(RoundedCornerShape(28.dp)), shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surface, tonalElevation = 6.dp) {
@@ -339,7 +340,7 @@ private fun AppPickerOverlaySingle(apps: List<AppInfo>, selectedPackage: String?
 private fun AppPickerOverlayMulti(apps: List<AppInfo>, alreadySelected: Set<String>, isArabic: Boolean, onAddSelected: (List<AppInfo>)->Unit, onDismiss: ()->Unit) {
     var query by remember { mutableStateOf("") }
     var selected by remember { mutableStateOf(setOf<String>()) }
-    val filtered = if (query.isBlank()) apps else apps.filter { safeContains(it.label, query) || safeContains(it.packageName, query) }
+    val filtered by remember(query, apps) { derivedStateOf { try { if (query.isBlank()) apps else { val q=query.trim(); if(q.isEmpty()) apps else apps.filter { try { safeContains(it.label,q) || safeContains(it.packageName,q) } catch(_:Throwable){false} } } } catch(_:Throwable){apps} } }
     val available = filtered.filterNot { alreadySelected.contains(it.packageName) }
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.scrim.copy(0.5f)).clickable(MutableInteractionSource(), null, onClick = onDismiss), contentAlignment = Alignment.Center) {
         Surface(Modifier.fillMaxWidth(0.94f).fillMaxHeight(0.85f).clip(RoundedCornerShape(28.dp)), shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surface, tonalElevation = 6.dp) {
