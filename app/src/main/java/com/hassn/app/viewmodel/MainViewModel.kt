@@ -111,16 +111,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val all = pm.queryIntentActivities(intent, 0)
                     .mapNotNull { AppInfo.fromResolveInfoSafe(it, pm) }
                     .map { it.sanitiseLabel() }
-                    .sortedBy { it.label.lowercase() }
+                    .sortedBy { try { it.label.lowercase(java.util.Locale.ROOT) } catch (_: Throwable) { it.label } }
 
                 val suggested = all.filter { a -> Constants.SUGGESTED_APPS.any { a.packageName == it } }
                 val rest = all - suggested.toSet()
                 _suggestedApps.value = suggested
                 _installedApps.value = suggested + rest
 
-                if (!autoPicked && targetApp.value == null && suggested.isNotEmpty()) {
+                // الوجهة الافتراضية: واعي إن وجد، وإلا أول مقترح
+                if (!autoPicked && targetApp.value == null) {
                     autoPicked = true
-                    selectTargetApp(suggested.first())
+                    val waie = all.find { it.packageName == Constants.DEFAULT_DEST_PACKAGE || it.label.contains("واعي") || it.label.contains("Waie", ignoreCase = true) }
+                    if (waie != null) selectTargetApp(waie)
+                    else if (suggested.isNotEmpty()) selectTargetApp(suggested.first())
                 }
             } catch (e: Exception) { Log.e(TAG, "loadApps failed", e) }
         }

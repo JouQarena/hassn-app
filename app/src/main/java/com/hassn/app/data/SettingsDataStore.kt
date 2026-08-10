@@ -40,7 +40,21 @@ class SettingsDataStore(private val context: Context) {
     val lockoutUntil: Flow<Long> = context.dataStore.data.map { it[KEY_LOCKOUT_UNTIL] ?: 0L }
 
     val monitoredApps: Flow<List<MonitoredApp>> = context.dataStore.data.map { prefs ->
-        MonitoredApp.listFromJson(prefs[KEY_MONITORED_APPS])
+        val custom = MonitoredApp.listFromJson(prefs[KEY_MONITORED_APPS])
+        // دمج التطبيقات الأساسية (ريديت/كروم/بريف) دائماً مع وضع private_only
+        val builtIns = Constants.BUILT_IN_PACKAGES.map { pkg ->
+            val label = when(pkg) {
+                Constants.REDDIT_PACKAGE -> "ريديت"
+                Constants.CHROME_PACKAGE -> "كروم"
+                Constants.BRAVE_PACKAGE -> "بريف"
+                else -> pkg
+            }
+            MonitoredApp(pkg, label, Constants.MODE_PRIVATE_ONLY)
+        }
+        // أضف فقط غير الموجود
+        val merged = custom.toMutableList()
+        for (b in builtIns) if (merged.none { it.packageName == b.packageName }) merged.add(0, b)
+        merged
     }
 
     val appLanguage: Flow<String> = context.dataStore.data.map { prefs ->
@@ -84,6 +98,7 @@ class SettingsDataStore(private val context: Context) {
     }
 
     suspend fun removeMonitoredApp(packageName: String) {
+        if (packageName in Constants.BUILT_IN_PACKAGES) return // لا يُحذف
         context.dataStore.edit { prefs ->
             val current = MonitoredApp.listFromJson(prefs[KEY_MONITORED_APPS])
             val filtered = current.filterNot { it.packageName == packageName }
@@ -92,6 +107,7 @@ class SettingsDataStore(private val context: Context) {
     }
 
     suspend fun updateMonitoredAppMode(packageName: String, mode: String) {
+        if (packageName in Constants.BUILT_IN_PACKAGES) return // وضع ثابت private_only
         context.dataStore.edit { prefs ->
             val current = MonitoredApp.listFromJson(prefs[KEY_MONITORED_APPS])
             val updated = current.map { if (it.packageName == packageName) it.copy(mode = mode) else it }

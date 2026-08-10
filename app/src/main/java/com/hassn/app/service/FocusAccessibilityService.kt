@@ -85,32 +85,29 @@ class HassnAccessibilityService : AccessibilityService() {
         // Don't redirect from destination app itself
         if (packageName == targetAppPackage) return
 
-        // Check custom monitored apps
+        // Check custom monitored apps + built-in fallback
         when {
             alwaysPackages.contains(packageName) -> {
-                // Always redirect - immediate on window state change, debounced on content
                 if (shouldProceed(eventType)) {
                     Log.i(TAG, "Always-redirect app detected: $packageName")
                     redirectToChosenApp()
                 }
             }
-            // Handle Chrome/Brave variants that may be installed as beta/dev
-            privateOnlyPackages.any { packageName.startsWith(it) || packageName == it } -> {
+            privateOnlyPackages.contains(packageName) || privateOnlyPackages.any { packageName.startsWith(it) } -> {
                 if (shouldProceed(eventType) && isIncognitoModeActive()) {
                     Log.i(TAG, "Private-only app incognito detected: $packageName")
                     redirectToChosenApp()
                 }
             }
-            // Also check exact match for private only
-            privateOnlyPackages.contains(packageName) -> {
+            // Built-in fallback: ريديت/كروم/بريف يعمل حتى بدون إضافتهم يدوياً
+            packageName == com.hassn.app.util.Constants.REDDIT_PACKAGE ||
+            packageName.startsWith(com.hassn.app.util.Constants.CHROME_PACKAGE) ||
+            packageName == com.hassn.app.util.Constants.BRAVE_PACKAGE -> {
                 if (shouldProceed(eventType) && isIncognitoModeActive()) {
-                    Log.i(TAG, "Private-only app incognito detected: $packageName")
+                    Log.i(TAG, "Built-in private app detected: $packageName")
                     redirectToChosenApp()
                 }
             }
-            // Fallback: handle built-in packages if no custom list yet (first launch)
-            // This ensures even with empty list, common distractors still work if needed
-            // But user explicitly controls list now, so we don't force redirects here
         }
     }
 

@@ -11,26 +11,34 @@ object Constants {
     const val MODE_ALWAYS = "always"
     const val MODE_PRIVATE_ONLY = "private_only"
 
-    // ── Incognito keywords (Arabic + English) ──────────────────────
+    // ── Incognito keywords - دقيقة جداً لتجنب الإيجابيات الكاذبة
+    // Reddit: فقط عبارات التصفح المجهول الكاملة، ليس كلمة anonymous وحدها (تظهر في البروفايل)
+    // Brave: فقط عبارات التبويب الخاص، ليس كلمة private وحدها (تظهر في مواقع كثيرة)
     val CHROME_INCOGNITO_KEYWORDS = listOf(
-        "incognito", "you've gone incognito", "inprivate",
-        "التصفح الخفي", "وضع التصفح الخفي", "خفي"
+        "you've gone incognito", "incognito"
     )
     val BRAVE_PRIVATE_KEYWORDS = listOf(
-        "private tab", "private browsing", "new private tab",
-        "التصفح الخاص", "تبويب خاص", "خاص"
+        "private tab", "private browsing", "new private tab"
     )
     val REDDIT_ANONYMOUS_KEYWORDS = listOf(
         "anonymous browsing", "browse anonymously",
-        "stop anonymous browsing", "anonymous mode",
-        "التصفح المجهول", "مجهول"
+        "stop anonymous browsing", "anonymous mode"
     )
-    val GENERIC_PRIVATE_KEYWORDS = listOf(
-        "private", "incognito", "inprivate", "anonymous",
-        "خفي", "خاص", "مجهول", "سري"
+    // كلمات عربية - فقط العبارات الكاملة
+    val ARABIC_PRIVATE_KEYWORDS = listOf(
+        "التصفح الخفي", "وضع التصفح الخفي",
+        "التصفح الخاص", "تبويب خاص",
+        "التصفح المجهول"
     )
     val INCOGNITO_KEYWORDS = CHROME_INCOGNITO_KEYWORDS +
-            BRAVE_PRIVATE_KEYWORDS + REDDIT_ANONYMOUS_KEYWORDS + GENERIC_PRIVATE_KEYWORDS
+            BRAVE_PRIVATE_KEYWORDS + REDDIT_ANONYMOUS_KEYWORDS + ARABIC_PRIVATE_KEYWORDS
+
+    // Built-in monitored apps packages (لا تُحذف)
+    val BUILT_IN_PACKAGES = setOf(REDDIT_PACKAGE, CHROME_PACKAGE, BRAVE_PACKAGE)
+
+    // Default destination "واعي"
+    const val DEFAULT_DEST_PACKAGE = "com.waie.app"
+    const val DEFAULT_DEST_LABEL = "واعي"
 
     // ── Timing ─────────────────────────────────────────────────────
     const val DEBOUNCE_MS = 800L

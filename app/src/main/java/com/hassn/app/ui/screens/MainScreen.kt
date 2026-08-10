@@ -232,12 +232,28 @@ private fun MonitoredAppRow(app: MonitoredApp, isArabic: Boolean, onRemove: ()->
             Icon(Icons.Default.PhoneAndroid, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
-                Text(app.label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(app.label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, modifier = Modifier.weight(1f, fill = false))
+                    if (app.packageName in com.hassn.app.util.Constants.BUILT_IN_PACKAGES) {
+                        Spacer(Modifier.width(6.dp))
+                        Icon(Icons.Default.Lock, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(14.dp))
+                    }
+                }
                 Text(app.packageName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                 Spacer(Modifier.height(4.dp))
-                AssistChip(onClick = onChangeMode, label = { Text(if (app.isAlways) if (isArabic) "دائماً" else "Always" else if (isArabic) "خاص فقط" else "Private only", style = MaterialTheme.typography.labelSmall) }, leadingIcon = { Icon(if (app.isAlways) Icons.Default.Bolt else Icons.Default.VisibilityOff, null, modifier = Modifier.size(16.dp)) })
+                val isBuiltIn = app.packageName in com.hassn.app.util.Constants.BUILT_IN_PACKAGES
+                AssistChip(
+                    enabled = !isBuiltIn,
+                    onClick = { if (!isBuiltIn) onChangeMode() },
+                    label = { Text(if (app.isAlways) if (isArabic) "دائماً" else "Always" else "تبويب خاص فقط", style = MaterialTheme.typography.labelSmall) },
+                    leadingIcon = { Icon(if (app.isAlways) Icons.Default.Bolt else Icons.Default.VisibilityOff, null, modifier = Modifier.size(16.dp)) }
+                )
             }
-            IconButton(onClick = onRemove) { Icon(Icons.Default.Close, contentDescription = "Remove", tint = MaterialTheme.colorScheme.error) }
+            if (app.packageName in com.hassn.app.util.Constants.BUILT_IN_PACKAGES) {
+                Icon(Icons.Default.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha=0.5f), modifier = Modifier.size(20.dp))
+            } else {
+                IconButton(onClick = onRemove) { Icon(Icons.Default.Close, contentDescription = "Remove", tint = MaterialTheme.colorScheme.error) }
+            }
         }
     }
 }
@@ -259,7 +275,14 @@ private fun HowItWorksCard(isArabic: Boolean) {
 @Composable
 private fun AccessibilityStatusCardAr(context: Context, isArabic: Boolean) {
     var isEnabled by remember { mutableStateOf(isAccessibilityEnabled(context)) }
-    LaunchedEffect(Unit) { while(true){ kotlinx.coroutines.delay(800); try{ isEnabled=isAccessibilityEnabled(context)}catch(_:Throwable){} } }
+    // تحديث تلقائي كل ثانية + عند العودة للواجهة
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(800)
+            try { isEnabled = isAccessibilityEnabled(context) } catch (_:Throwable) {}
+        }
+    }
+    // أيضاً عند كل recomposition تحقق سريع
     Card(Modifier.fillMaxWidth().clickable { try { context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) } catch (_:Exception){} }, colors = CardDefaults.cardColors(containerColor = if (isEnabled) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.errorContainer)) {
         Row(Modifier.fillMaxWidth().padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.Settings, null, tint = if (isEnabled) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onErrorContainer, modifier = Modifier.size(28.dp))
@@ -302,7 +325,20 @@ private fun ModeChooserDialog(app: MonitoredApp, isArabic: Boolean, onChoose: (S
 @Composable
 private fun AppPickerOverlaySingle(apps: List<AppInfo>, selectedPackage: String?, isArabic: Boolean, onSelect: (AppInfo)->Unit, onDismiss: ()->Unit) {
     var query by remember { mutableStateOf("") }
-    val filtered by remember(query, apps) { derivedStateOf { try { if (query.isBlank()) apps else { val q=query.trim(); if(q.isEmpty()) apps else apps.filter { try { safeContains(it.label,q) || safeContains(it.packageName,q) } catch(_:Throwable){false} } } } catch(_:Throwable){apps} } }
+    val filtered by remember(query, apps) {
+        derivedStateOf {
+            try {
+                if (query.isBlank()) apps
+                else {
+                    val q = query.trim()
+                    if (q.isEmpty()) apps
+                    else apps.filter {
+                        try { safeContains(it.label, q) || safeContains(it.packageName, q) } catch (_:Throwable) { false }
+                    }
+                }
+            } catch (_:Throwable) { apps }
+        }
+    }
     val layoutDirection = LocalLayoutDirection.current
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.scrim.copy(0.5f)).clickable(MutableInteractionSource(), null, onClick = onDismiss), contentAlignment = Alignment.Center) {
         Surface(Modifier.fillMaxWidth(0.94f).fillMaxHeight(0.82f).clip(RoundedCornerShape(28.dp)), shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surface, tonalElevation = 6.dp) {
@@ -340,7 +376,20 @@ private fun AppPickerOverlaySingle(apps: List<AppInfo>, selectedPackage: String?
 private fun AppPickerOverlayMulti(apps: List<AppInfo>, alreadySelected: Set<String>, isArabic: Boolean, onAddSelected: (List<AppInfo>)->Unit, onDismiss: ()->Unit) {
     var query by remember { mutableStateOf("") }
     var selected by remember { mutableStateOf(setOf<String>()) }
-    val filtered by remember(query, apps) { derivedStateOf { try { if (query.isBlank()) apps else { val q=query.trim(); if(q.isEmpty()) apps else apps.filter { try { safeContains(it.label,q) || safeContains(it.packageName,q) } catch(_:Throwable){false} } } } catch(_:Throwable){apps} } }
+    val filtered by remember(query, apps) {
+        derivedStateOf {
+            try {
+                if (query.isBlank()) apps
+                else {
+                    val q = query.trim()
+                    if (q.isEmpty()) apps
+                    else apps.filter {
+                        try { safeContains(it.label, q) || safeContains(it.packageName, q) } catch (_:Throwable) { false }
+                    }
+                }
+            } catch (_:Throwable) { apps }
+        }
+    }
     val available = filtered.filterNot { alreadySelected.contains(it.packageName) }
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.scrim.copy(0.5f)).clickable(MutableInteractionSource(), null, onClick = onDismiss), contentAlignment = Alignment.Center) {
         Surface(Modifier.fillMaxWidth(0.94f).fillMaxHeight(0.85f).clip(RoundedCornerShape(28.dp)), shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surface, tonalElevation = 6.dp) {

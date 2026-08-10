@@ -22,22 +22,23 @@ data class AppInfo(
         val safe = try {
             val src = label
             if (src.isEmpty()) return this.copy(label = packageName)
+            // Android 10: تجنب تماماً lowercase/تركيب الحروف المعقدة - فقط نظف الـ surrogates والتحكم
             val sb = StringBuilder(src.length)
             var i = 0
             while (i < src.length) {
                 val cp = src.codePointAt(i)
-                // Replace the Unicode replacement character and
-                // unpaired surrogates — both of which have crashed
-                // Android 10 text shapers when coming from per-app
-                // translation labels.
-                if (cp == 0xFFFD || (cp in 0xD800..0xDFFF)) {
-                    sb.append('?')
+                if (cp == 0xFFFD || (cp in 0xD800..0xDFFF) || cp < 32) {
+                    sb.append(' ')
+                } else if (cp in 0x200B..0x200F || cp in 0x202A..0x202E || cp == 0xFEFF) {
+                    // إزالة محددات الاتجاه RTL/LTR الخفية التي تسبب كراش في Android 10
                 } else {
                     sb.appendCodePoint(cp)
                 }
                 i += Character.charCount(cp)
             }
-            sb.toString()
+            var s = sb.toString().trim().replace(Regex("\\s+"), " ")
+            if (s.length > 50) s = s.take(50)
+            s
         } catch (_: Throwable) {
             packageName
         }
