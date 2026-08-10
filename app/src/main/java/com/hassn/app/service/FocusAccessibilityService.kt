@@ -99,12 +99,12 @@ class HassnAccessibilityService : AccessibilityService() {
                     redirectToChosenApp()
                 }
             }
-            // Built-in fallback: ريديت/كروم/بريف يعمل حتى بدون إضافتهم يدوياً
+            // Built-in: ريديت/كروم/بريف - كشف عبر اسم الـ Activity فقط (لا يفحص نص المواقع)
             packageName == com.hassn.app.util.Constants.REDDIT_PACKAGE ||
             packageName.startsWith(com.hassn.app.util.Constants.CHROME_PACKAGE) ||
             packageName == com.hassn.app.util.Constants.BRAVE_PACKAGE -> {
-                if (shouldProceed(eventType) && isIncognitoModeActive()) {
-                    Log.i(TAG, "Built-in private app detected: $packageName")
+                if (shouldProceed(eventType) && isPrivateByActivity(event)) {
+                    Log.i(TAG, "Built-in private Activity detected: $packageName class=${event.className}")
                     redirectToChosenApp()
                 }
             }
@@ -128,6 +128,7 @@ class HassnAccessibilityService : AccessibilityService() {
         return (now - lastRedirectTimestamp) > Constants.DEBOUNCE_MS
     }
 
+    // للتطبيقات المخصصة: فحص الكلمات (يشمل نص الصفحة)
     private fun isIncognitoModeActive(): Boolean {
         val root = rootInActiveWindow ?: run {
             Log.v(TAG, "No active window root")
@@ -138,6 +139,50 @@ class HassnAccessibilityService : AccessibilityService() {
         } finally {
             root.recycle()
         }
+    }
+
+    // للـ 3 تطبيقات الأساسية: فحص اسم الـ Activity فقط (لا يتأثر بمحتوى المواقع)
+    private fun isPrivateByActivity(event: AccessibilityEvent): Boolean {
+        fun String?.safeLower(): String = this?.lowercase(java.util.Locale.ROOT).orEmpty()
+        val eventClass = event.className?.toString().safeLower()
+        val pkg = event.packageName?.toString().safeLower()
+
+        // 1. فحص اسم الـ Activity من الحدث نفسه
+        val activityKeywords = listOf("incognito", "private", "anonymous")
+        for (kw in activityKeywords) {
+            if (kw in eventClass) {
+                Log.d(TAG, "Private Activity matched: class=$eventClass kw=$kw")
+                return true
+            }
+        }
+        // 2. فحص شجرة الـ Nodes لكن فقط className و viewId (لا يفحص text/contentDesc الخاصة بالمواقع)
+        val root = rootInActiveWindow ?: return false
+        return try {
+            searchActivityForPrivate(root)
+        } finally {
+            root.recycle()
+        }
+    }
+
+    private fun searchActivityForPrivate(node: AccessibilityNodeInfo): Boolean {
+        fun String?.safeLower(): String = this?.lowercase(java.util.Locale.ROOT).orEmpty()
+        // فقط className و viewId - لا نفحص text لتجنب كلمات داخل صفحات الويب
+        val viewId = node.viewIdResourceName.safeLower()
+        val className = node.className?.toString().safeLower()
+        val combined = "$viewId $className"
+        val activityKeywords = listOf("incognito", "private", "anonymous")
+        for (kw in activityKeywords) {
+            if (kw in combined) {
+                Log.d(TAG, "Private viewId/class matched: $combined kw=$kw")
+                return true
+            }
+        }
+        for (i in 0 until node.childCount) {
+            val child = node.getChild(i) ?: continue
+            val found = try { searchActivityForPrivate(child) } finally { child.recycle() }
+            if (found) return true
+        }
+        return false
     }
 
     private fun searchNodeForIncognito(node: AccessibilityNodeInfo): Boolean {
