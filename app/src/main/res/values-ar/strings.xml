@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">حصّن</string>
+
+    <!-- Accessibility -->
+    <string name="accessibility_service_description">حصّن يراقب استخدام التطبيقات لمساعدتك على التركيز عبر التحويل من التطبيقات المشتتة إلى التطبيقات المفيدة.</string>
+
+    <!-- Main Screen -->
+    <string name="protection">الحماية</string>
+    <string name="protection_subtitle">عند فتح تطبيق مُشِتِّت، يرد حصّن تلقائياً حسب إعداداتك</string>
+    <string name="protection_locked">محاولات إيقاف متكررة — الحماية مقفلة مؤقتاً</string>
+    <string name="behavior_when_distraction">ما الذي يحدث عند فتح تطبيق مُشِتِّت:</string>
+    <string name="show_message">عرض رسالة تحفيزية</string>
+    <string name="show_challenge">طلب إكمال تحدي</string>
+    <string name="redirect_app">التحويل لتطبيق مفيد</string>
+    <string name="execution_order">ترتيب التنفيذ</string>
+    <string name="monitored_apps">التطبيقات المراقبة (%d)</string>
+    <string name="add_app">إضافة تطبيق</string>
+    <string name="customize_message">تخصيص الرسالة</string>
+    <string name="challenge_settings">إعدادات التحدي</string>
+    <string name="choose_destination_app">اختيار التطبيق المفيد</string>
+    <string name="current_destination">التطبيق: %s</string>
+    <string name="monitoring_mode">وضع المراقبة</string>
+    <string name="mode_always">دائماً</string>
+    <string name="mode_private_only">كشف الوضع الخاص فقط</string>
+    <string name="custom_keywords">كلمات مفتاحية لكشف الوضع الخاص</string>
+    <string name="keyword_hint">مثال: خاص أو incognito</string>
+    <string name="add_keyword">إضافة</string>
+    <string name="enabled">مفعّل</string>
+    <string name="save">حفظ</string>
+    <string name="cancel">إلغاء</string>
+    <string name="search_apps">ابحث عن تطبيق…</string>
+    <string name="delete">حذف</string>
+    <string name="move_up">تحريك لأعلى</string>
+    <string name="move_down">تحريك لأسفل</string>
+
+    <!-- Permissions -->
+    <string name="permission_accessibility_title">خدمة الوصول مطلوبة</string>
+    <string name="permission_accessibility_body">فعّل خدمة حصّن من إعدادات الوصول لمراقبة التطبيقات</string>
+    <string name="permission_overlay_title">إذن العرض فوق التطبيقات</string>
+    <string name="permission_overlay_body">يحتاج حصّن إلى هذا الإذن لعرض الرسائل والتحديات والتحويل بين التطبيقات</string>
+    <string name="permission_activate">تفعيل</string>
+
+    <!-- Challenges -->
+    <string name="challenge_press">الضغط المستمر</string>
+    <string name="challenge_breath">حبس النفس</string>
+    <string name="challenge_water">شرب الماء</string>
+    <string name="challenge_type_text">كتابة النص</string>
+    <string name="challenge_math">حساب رياضي</string>
+    <string name="challenge_color">مطابقة الألوان</string>
+    <string name="challenge_pattern">النمط</string>
+    <string name="challenge_sequence">التسلسل</string>
+    <string name="challenge_morse">شيفرة مورس</string>
+    <string name="difficulty">مستوى الصعوبة</string>
+    <string name="difficulty_easy">سهل</string>
+    <string name="difficulty_medium">متوسط</string>
+    <string name="difficulty_hard">صعب</string>
+    <string name="available_challenges">التحديات المتاحة</string>
+    <string name="challenge_press_instruction">اضغط على الدائرة باستمرار حتى تكتمل</string>
+    <string name="challenge_breath_instruction">احبس أنفاسك حتى النهاية</string>
+    <string name="challenge_water_instruction">اشرب كوب ماء كاملاً</string>
+    <string name="challenge_type_text_instruction">اكتب النص التالي حرفياً</string>
+    <string name="challenge_math_instruction">حُل المسألة ثم اضغط تحقق</string>
+    <string name="challenge_color_instruction">اضغط على اللون المطابق للاسم</string>
+    <string name="challenge_pattern_instruction">راقب النمط ثم أعد تكراره</string>
+    <string name="challenge_sequence_instruction">ما العنصر التالي في التسلسل؟</string>
+    <string name="challenge_morse_instruction">أعد الشيفرة بالضغط على النقطة والشريطة بالترتيب</string>
+    <string name="challenge_verify">تحقق</string>
+    <string name="watching">راقب…</string>
+    <string name="your_turn">دورك</string>
+
+    <!-- Message settings -->
+    <string name="message_text">نص الرسالة</string>
+    <string name="bg_color">لون الخلفية</string>
+    <string name="text_color">لون النص</string>
+    <string name="opacity">شفافية الخلفية</string>
+    <string name="text_size">حجم النص</string>
+    <string name="duration">مدة العرض (ثانية)</string>
+    <string name="preview">معاينة</string>
+    <string name="choose_image">اختيار صورة</string>
+    <string name="remove_image">إزالة الصورة</string>
+
+    <!-- إعدادات متقدمة / مراجعة الحذف -->
+    <string name="advanced_settings">إعدادات متقدمة</string>
+    <string name="uninstall_review">إزالة حصّن</string>
+    <string name="are_you_sure">هل أنت متأكد من حذف حصّن؟</string>
+    <string name="days_using_hassn">أيام استخدام حصّن</string>
+    <string name="total_redirections">إجمالي التحويلات</string>
+    <string name="challenges_completed">التحديات المكتملة</string>
+    <string name="estimated_time_saved">الوقت المقدّر المحفوظ</string>
+    <string name="hours_format">%d ساعة</string>
+    <string name="uninstall_final_message">نأمل أن يكون حصّن ساعدك في بناء عادات تركيز أفضل. يمكنك دائماً إعادة التثبيت من GitHub.</string>
+    <string name="keep_hassn">الإبقاء على حصّن</string>
+    <string name="continue_uninstall">المتابعة</string>
+</resources>

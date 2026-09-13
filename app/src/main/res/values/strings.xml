@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Hassn</string>
+
+    <!-- Accessibility -->
+    <string name="accessibility_service_description">Hassn monitors app usage to help you stay focused by redirecting you from distracting apps to productive ones.</string>
+
+    <!-- Main Screen -->
+    <string name="protection">Protection</string>
+    <string name="protection_subtitle">When you open a distracting app, Hassn responds automatically</string>
+    <string name="protection_locked">Too many failed attempts — protection is temporarily locked</string>
+    <string name="behavior_when_distraction">What happens when you open a distracting app:</string>
+    <string name="show_message">Show motivational message</string>
+    <string name="show_challenge">Request challenge completion</string>
+    <string name="redirect_app">Redirect to a productive app</string>
+    <string name="execution_order">Execution order</string>
+    <string name="monitored_apps">Monitored apps (%d)</string>
+    <string name="add_app">Add app</string>
+    <string name="customize_message">Customize message</string>
+    <string name="challenge_settings">Challenge settings</string>
+    <string name="choose_destination_app">Choose destination app</string>
+    <string name="current_destination">App: %s</string>
+    <string name="monitoring_mode">Monitoring mode</string>
+    <string name="mode_always">Always</string>
+    <string name="mode_private_only">Detect private mode only</string>
+    <string name="custom_keywords">Keywords to detect private mode</string>
+    <string name="keyword_hint">e.g. Private or incognito</string>
+    <string name="add_keyword">Add</string>
+    <string name="enabled">Enabled</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="search_apps">Search for an app…</string>
+    <string name="delete">Delete</string>
+    <string name="move_up">Move up</string>
+    <string name="move_down">Move down</string>
+
+    <!-- Permissions -->
+    <string name="permission_accessibility_title">Accessibility service required</string>
+    <string name="permission_accessibility_body">Enable the Hassn service in accessibility settings to monitor apps</string>
+    <string name="permission_overlay_title">Draw over other apps permission</string>
+    <string name="permission_overlay_body">Hassn needs this permission to show messages, challenges and switch apps</string>
+    <string name="permission_activate">Enable</string>
+
+    <!-- Challenges -->
+    <string name="challenge_press">Press and Hold</string>
+    <string name="challenge_breath">Hold Your Breath</string>
+    <string name="challenge_water">Drink Water</string>
+    <string name="challenge_type_text">Type Text</string>
+    <string name="challenge_math">Math Problem</string>
+    <string name="challenge_color">Color Match</string>
+    <string name="challenge_pattern">Pattern</string>
+    <string name="challenge_sequence">Sequence</string>
+    <string name="challenge_morse">Morse Code</string>
+    <string name="difficulty">Difficulty</string>
+    <string name="difficulty_easy">Easy</string>
+    <string name="difficulty_medium">Medium</string>
+    <string name="difficulty_hard">Hard</string>
+    <string name="available_challenges">Available challenges</string>
+    <string name="challenge_press_instruction">Keep pressing the circle until it completes</string>
+    <string name="challenge_breath_instruction">Hold your breath until the end</string>
+    <string name="challenge_water_instruction">Drink a full glass of water</string>
+    <string name="challenge_type_text_instruction">Type the text below exactly</string>
+    <string name="challenge_math_instruction">Solve the problem, then tap Verify</string>
+    <string name="challenge_color_instruction">Tap the swatch matching the name</string>
+    <string name="challenge_pattern_instruction">Watch the pattern, then repeat it</string>
+    <string name="challenge_sequence_instruction">What comes next in the sequence?</string>
+    <string name="challenge_morse_instruction">Replay the code by tapping dot and dash in order</string>
+    <string name="challenge_verify">Verify</string>
+    <string name="watching">Watch…</string>
+    <string name="your_turn">Your turn</string>
+
+    <!-- Message settings -->
+    <string name="message_text">Message text</string>
+    <string name="bg_color">Background color</string>
+    <string name="text_color">Text color</string>
+    <string name="opacity">Background opacity</string>
+    <string name="text_size">Text size</string>
+    <string name="duration">Display duration (seconds)</string>
+    <string name="preview">Preview</string>
+    <string name="choose_image">Choose image</string>
+    <string name="remove_image">Remove image</string>
+
+    <!-- Advanced settings / Uninstall review -->
+    <string name="advanced_settings">Advanced Settings</string>
+    <string name="uninstall_review">Remove Hassn</string>
+    <string name="are_you_sure">Are you sure you want to uninstall Hassn?</string>
+    <string name="days_using_hassn">Days using Hassn</string>
+    <string name="total_redirections">Total redirections</string>
+    <string name="challenges_completed">Challenges completed</string>
+    <string name="estimated_time_saved">Estimated time saved</string>
+    <string name="hours_format">%d hours</string>
+    <string name="uninstall_final_message">We hope Hassn helped you build better focus habits. You can always reinstall from GitHub.</string>
+    <string name="keep_hassn">Keep Hassn</string>
+    <string name="continue_uninstall">Continue</string>
+</resources>
