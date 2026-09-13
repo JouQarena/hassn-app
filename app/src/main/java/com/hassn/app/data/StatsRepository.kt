@@ -2,10 +2,12 @@ package com.hassn.app.data
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 
 /**
@@ -45,7 +47,9 @@ class StatsRepository(private val dataStore: DataStore<Preferences>) {
         }
     }
 
-    fun getStats(): Flow<UsageStats> = dataStore.data.map { prefs ->
+    fun getStats(): Flow<UsageStats> = dataStore.data
+        .catch { emit(emptyPreferences()) }
+        .map { prefs ->
         val installDate = prefs[INSTALL_DATE_KEY] ?: System.currentTimeMillis()
         val daysUsed = ((System.currentTimeMillis() - installDate) / (1000L * 60 * 60 * 24)).toInt()
         val totalRedirections = prefs[TOTAL_REDIRECTIONS_KEY] ?: 0

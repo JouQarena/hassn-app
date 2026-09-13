@@ -1,6 +1,7 @@
 package com.hassn.app
 
 import android.app.Application
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
@@ -41,10 +42,42 @@ class HassnApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        installCrashLogger()
         val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
         scope.launch {
-            appLocale = settingsRepository.locale.first()
-            statsRepository.initialize()
+            try {
+                appLocale = settingsRepository.locale.first()
+                statsRepository.initialize()
+            } catch (e: Exception) {
+                // Never crash the process on a startup read failure
+                Log.e("HassnApp", "Startup init failed", e)
+            }
+        }
+    }
+
+    /**
+     * Writes uncaught exception traces to filesDir/hassn_crash.log so the
+     * crash can be inspected without a debugger, then defers to the default
+     * handler (system crash dialog).
+     */
+    private fun installCrashLogger() {
+        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            try {
+                val writer = java.io.StringWriter()
+                throwable.printStackTrace(java.io.PrintWriter(writer))
+                File(filesDir, "hassn_crash.log").writeText(
+                    "Thread: ${thread.name}\n" + writer
+                )
+            } catch (_: Exception) {
+                // best effort only
+            }
+            if (defaultHandler != null) {
+                defaultHandler.uncaughtException(thread, throwable)
+            } else {
+                android.os.Process.killProcess(android.os.Process.myPid())
+                throw throwable
+            }
         }
     }
 }

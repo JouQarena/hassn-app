@@ -2,9 +2,11 @@ package com.hassn.app.data
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.decodeFromString
@@ -13,7 +15,11 @@ import kotlinx.serialization.json.Json
 
 class MonitoredAppsRepository(private val dataStore: DataStore<Preferences>) {
 
-    fun getAllMonitoredApps(): Flow<List<MonitoredApp>> = dataStore.data.map { prefs ->
+    /** Never throws: falls back to empty prefs if the file is corrupted. */
+    private val safeData: Flow<Preferences> =
+        dataStore.data.catch { emit(emptyPreferences()) }
+
+    fun getAllMonitoredApps(): Flow<List<MonitoredApp>> = safeData.map { prefs ->
         prefs[KEY_MONITORED_APPS]?.let { json -> decodeList(json) } ?: emptyList()
     }
 

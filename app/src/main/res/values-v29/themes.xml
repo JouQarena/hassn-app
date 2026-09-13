@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Base parent is API 21+ safe (minSdk is 24); the values-v29 variant
-         upgrades to Theme.DeviceDefault.DayNight on Android 10+. -->
-    <style name="Theme.Hassn" parent="@android:style/Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Hassn" parent="@android:style/Theme.DeviceDefault.DayNight" />
 
     <style name="Theme.Hassn.NoActionBar" parent="Theme.Hassn">
         <item name="android:windowActionBar">false</item>

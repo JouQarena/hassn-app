@@ -3,11 +3,13 @@ package com.hassn.app.data
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.hassn.app.util.Constants
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -15,8 +17,13 @@ import kotlinx.serialization.json.Json
 
 class SettingsRepository(private val dataStore: DataStore<Preferences>) {
 
+    /** DataStore data that never throws: falls back to empty prefs if the
+     *  backing file is corrupted (e.g. leftover from an older app version). */
+    private val safeData: Flow<Preferences> =
+        dataStore.data.catch { emit(emptyPreferences()) }
+
     // Protection enabled
-    val protectionEnabled: Flow<Boolean> = dataStore.data.map { prefs ->
+    val protectionEnabled: Flow<Boolean> = safeData.map { prefs ->
         prefs[KEY_PROTECTION] ?: false
     }
 
@@ -25,7 +32,7 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
     }
 
     // Selected behaviors (default: redirect only)
-    val selectedBehaviors: Flow<Set<String>> = dataStore.data.map { prefs ->
+    val selectedBehaviors: Flow<Set<String>> = safeData.map { prefs ->
         prefs[KEY_SELECTED_BEHAVIORS] ?: Constants.DEFAULT_BEHAVIORS
     }
 
@@ -34,7 +41,7 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
     }
 
     // Custom execution order (JSON list)
-    val behaviorOrder: Flow<List<String>> = dataStore.data.map { prefs ->
+    val behaviorOrder: Flow<List<String>> = safeData.map { prefs ->
         prefs[KEY_BEHAVIOR_ORDER]?.let { json ->
             tryDecodeList(json)
         } ?: Constants.DEFAULT_BEHAVIOR_ORDER
@@ -45,7 +52,7 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
     }
 
     // Message settings
-    val messageSettings: Flow<MessageSettings> = dataStore.data.map { prefs ->
+    val messageSettings: Flow<MessageSettings> = safeData.map { prefs ->
         prefs[KEY_MESSAGE_SETTINGS]?.let { json -> decodeMessage(json) }
             ?: MessageSettings.DEFAULT
     }
@@ -57,7 +64,7 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
     }
 
     // Challenge settings
-    val challengeSettings: Flow<ChallengeSettings> = dataStore.data.map { prefs ->
+    val challengeSettings: Flow<ChallengeSettings> = safeData.map { prefs ->
         prefs[KEY_CHALLENGE_SETTINGS]?.let { json -> decodeChallenge(json) }
             ?: ChallengeSettings()
     }
@@ -69,7 +76,7 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
     }
 
     // Redirect settings
-    val redirectSettings: Flow<RedirectSettings> = dataStore.data.map { prefs ->
+    val redirectSettings: Flow<RedirectSettings> = safeData.map { prefs ->
         prefs[KEY_REDIRECT_SETTINGS]?.let { json -> decodeRedirect(json) }
             ?: RedirectSettings()
     }
@@ -81,7 +88,7 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
     }
 
     // Locale (ar is primary)
-    val locale: Flow<String> = dataStore.data.map { prefs ->
+    val locale: Flow<String> = safeData.map { prefs ->
         prefs[KEY_LOCALE] ?: "ar"
     }
 
