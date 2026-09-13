@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    name: Build & Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build and run unit tests
+        uses: gradle/gradle-build-action@v3
+        with:
+          # The repo ships without a Gradle wrapper, so pin the distribution explicitly
+          gradle-version: '8.7'
+          arguments: assembleDebug testDebugUnitTest
+
+      - name: Upload debug APK
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: hassn-debug
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 7
