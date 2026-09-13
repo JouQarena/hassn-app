@@ -2,14 +2,13 @@ package com.hassn.app.service
 
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.view.accessibility.AccessibilityService
+import android.accessibilityservice.AccessibilityService
 import com.hassn.app.data.ChallengeSettings
 import com.hassn.app.data.MessageSettings
 import com.hassn.app.data.RedirectSettings
 import com.hassn.app.data.SettingsRepository
 import com.hassn.app.util.Constants
 import io.mockk.Runs
-import io.mockk.any
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk

@@ -14,7 +14,7 @@
         android:label="@string/app_name"
         android:roundIcon="@drawable/ic_launcher"
         android:supportsRtl="true"
-        android:theme="@android:style/Theme.DeviceDefault.DayNight"
+        android:theme="@style/Theme.Hassn"
         tools:targetApi="31">
 
         <activity
@@ -31,12 +31,12 @@
             android:exported="false"
             android:excludeFromRecents="true"
             android:taskAffinity=""
-            android:theme="@android:style/Theme.DeviceDefault.NoActionBar" />
+            android:theme="@style/Theme.Hassn.NoActionBar" />
 
         <activity
             android:name=".admin.UninstallWarningActivity"
             android:exported="false"
-            android:theme="@android:style/Theme.DeviceDefault.DayNight.NoActionBar" />
+            android:theme="@style/Theme.Hassn.NoActionBar" />
 
         <service
             android:name=".service.HassnAccessibilityService"

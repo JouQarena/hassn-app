@@ -1,5 +1,6 @@
 package com.hassn.app.service
 
+import android.accessibilityservice.AccessibilityService
 import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
@@ -8,7 +9,6 @@ import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
-import android.view.accessibility.AccessibilityService
 import androidx.compose.ui.platform.ComposeView
 import com.hassn.app.data.ChallengeSettings
 import com.hassn.app.data.MessageSettings

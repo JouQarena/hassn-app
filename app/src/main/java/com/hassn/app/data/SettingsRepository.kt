@@ -46,9 +46,8 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
 
     // Message settings
     val messageSettings: Flow<MessageSettings> = dataStore.data.map { prefs ->
-        prefs[KEY_MESSAGE_SETTINGS]?.let { json ->
-            tryDecode<MessageSettings>(json)
-        } ?: MessageSettings.DEFAULT
+        prefs[KEY_MESSAGE_SETTINGS]?.let { json -> decodeMessage(json) }
+            ?: MessageSettings.DEFAULT
     }
 
     suspend fun updateMessageSettings(settings: MessageSettings) {
@@ -59,9 +58,8 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
 
     // Challenge settings
     val challengeSettings: Flow<ChallengeSettings> = dataStore.data.map { prefs ->
-        prefs[KEY_CHALLENGE_SETTINGS]?.let { json ->
-            tryDecode<ChallengeSettings>(json)
-        } ?: ChallengeSettings()
+        prefs[KEY_CHALLENGE_SETTINGS]?.let { json -> decodeChallenge(json) }
+            ?: ChallengeSettings()
     }
 
     suspend fun updateChallengeSettings(settings: ChallengeSettings) {
@@ -72,9 +70,8 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
 
     // Redirect settings
     val redirectSettings: Flow<RedirectSettings> = dataStore.data.map { prefs ->
-        prefs[KEY_REDIRECT_SETTINGS]?.let { json ->
-            tryDecode<RedirectSettings>(json)
-        } ?: RedirectSettings()
+        prefs[KEY_REDIRECT_SETTINGS]?.let { json -> decodeRedirect(json) }
+            ?: RedirectSettings()
     }
 
     suspend fun updateRedirectSettings(settings: RedirectSettings) {
@@ -108,9 +105,18 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
                 Constants.DEFAULT_BEHAVIOR_ORDER
             }
 
-        private fun <T> tryDecode(json: String): T? =
+        private fun decodeMessage(json: String): MessageSettings? =
+            tryDecode(json) { Json.decodeFromString<MessageSettings>(it) }
+
+        private fun decodeChallenge(json: String): ChallengeSettings? =
+            tryDecode(json) { Json.decodeFromString<ChallengeSettings>(it) }
+
+        private fun decodeRedirect(json: String): RedirectSettings? =
+            tryDecode(json) { Json.decodeFromString<RedirectSettings>(it) }
+
+        private fun <T> tryDecode(json: String, decoder: (String) -> T): T? =
             try {
-                Json.decodeFromString<T>(json)
+                decoder(json)
             } catch (e: Exception) {
                 null
             }

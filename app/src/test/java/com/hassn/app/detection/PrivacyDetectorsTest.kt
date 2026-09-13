@@ -1,7 +1,6 @@
 package com.hassn.app.detection
 
 import android.view.accessibility.AccessibilityNodeInfo
-import io.mockk.any
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertFalse

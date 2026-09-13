@@ -27,7 +27,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -48,7 +47,7 @@ class UninstallWarningActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val app = application as HassnApp
-        val statsViewModel = remember { StatsViewModel(app.statsRepository) }
+        val statsViewModel = StatsViewModel(app.statsRepository)
         setContent {
             HassnTheme {
                 UninstallWarningScreen(

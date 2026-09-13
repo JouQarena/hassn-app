@@ -1,11 +1,9 @@
 package com.hassn.app
 
 import android.app.Application
-import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStoreFile
 import com.hassn.app.data.ChallengeRepository
 import com.hassn.app.data.MonitoredAppsRepository
 import com.hassn.app.data.SettingsRepository
@@ -16,16 +14,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.io.File
 import kotlin.jvm.Volatile
 
-val Context.dataStore: DataStore<Preferences> by lazy {
-    PreferenceDataStoreFactory.create(
-        scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
-        produceFile = { preferencesDataStoreFile("hassn_prefs") }
-    )
-}
-
 class HassnApp : Application() {
+
+    val dataStore: DataStore<Preferences> by lazy {
+        val dir = File(filesDir, "datastore").apply { mkdirs() }
+        PreferenceDataStoreFactory.create(
+            scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
+            produceFile = { File(dir, "hassn_prefs.preferences_pb") }
+        )
+    }
 
     val settingsRepository: SettingsRepository by lazy { SettingsRepository(dataStore) }
     val monitoredAppsRepository: MonitoredAppsRepository by lazy {

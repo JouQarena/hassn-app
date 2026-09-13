@@ -12,7 +12,7 @@ private const val MAX_TRAVERSAL_DEPTH = 30
  * Safe traversal of the accessibility node tree.
  * Handles stale/recycled nodes without crashing.
  */
-fun AccessibilityNodeInfo.traverse(predicate: (AccessibilityNodeInfo) -> Unit, depth: Int = 0) {
+fun AccessibilityNodeInfo.traverse(depth: Int = 0, predicate: (AccessibilityNodeInfo) -> Unit) {
     if (depth > MAX_TRAVERSAL_DEPTH) return
     predicate(this)
     val count = try {
@@ -27,7 +27,7 @@ fun AccessibilityNodeInfo.traverse(predicate: (AccessibilityNodeInfo) -> Unit, d
             null
         } ?: continue
         try {
-            child.traverse(predicate, depth + 1)
+            child.traverse(depth + 1, predicate)
         } catch (e: Exception) {
             // skip broken subtree
         }

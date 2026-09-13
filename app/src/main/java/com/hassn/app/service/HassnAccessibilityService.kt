@@ -7,9 +7,9 @@ import android.provider.Settings
 import android.util.Log
 import android.view.Gravity
 import android.view.View
+import android.accessibilityservice.AccessibilityService
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
-import android.view.accessibility.AccessibilityService
 import com.hassn.app.HassnApp
 import com.hassn.app.data.MonitoredApp
 import com.hassn.app.data.MonitorMode

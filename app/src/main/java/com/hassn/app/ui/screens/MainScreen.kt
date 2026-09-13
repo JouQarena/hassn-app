@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.item
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -49,9 +48,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.compose.repeatOnLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import com.hassn.app.HassnApp
 import com.hassn.app.R
 import com.hassn.app.admin.UninstallWarningActivity
@@ -133,7 +132,7 @@ fun MainScreen(
                     IconButton(
                         onClick = {
                             viewModel.toggleLocale {
-                                (LocalContext.current as? Activity)?.recreate()
+                                (context as? Activity)?.recreate()
                             }
                         }
                     ) {
@@ -281,6 +280,7 @@ fun MainScreen(
             }
             if (Constants.BEHAVIOR_REDIRECT in selectedBehaviors) {
                 item {
+                    val destination = redirectSettings.destinationPackage
                     OutlinedButton(
                         onClick = onNavigateToDestinationPicker,
                         modifier = Modifier.fillMaxWidth()
@@ -288,11 +288,8 @@ fun MainScreen(
                         Icon(Icons.Default.Apps, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = if (redirectSettings.destinationPackage != null) {
-                                stringResource(
-                                    R.string.current_destination,
-                                    redirectSettings.destinationPackage
-                                )
+                            text = if (destination != null) {
+                                stringResource(R.string.current_destination, destination)
                             } else {
                                 stringResource(R.string.choose_destination_app)
                             }

@@ -34,8 +34,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEvent
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.awaitPointerEventScope
-import androidx.compose.ui.input.pointer.awaitPointerEvent
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -181,7 +179,7 @@ private fun PressAndHoldChallenge(
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(
-                progress = { progress },
+                progress = progress,
                 modifier = Modifier.matchParentSize(),
                 strokeWidth = 8.dp
             )

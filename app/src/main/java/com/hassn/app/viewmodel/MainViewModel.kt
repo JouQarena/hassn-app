@@ -2,6 +2,9 @@ package com.hassn.app.viewmodel
 
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hassn.app.HassnApp
@@ -103,10 +106,9 @@ class MainViewModel(private val app: HassnApp) : ViewModel() {
             val order = behaviorOrder.value.toMutableList()
             val from = order.indexOf(behavior)
             val to = from + direction
-            if (from in order.indices && to in order.indices) {
-                order[from] = order[to]
-                order[to] = behavior
-            }
+            if (from !in order.indices || to !in order.indices) return@launch
+            order[from] = order[to]
+            order[to] = behavior
             settingsRepo.setBehaviorOrder(order)
         }
     }
@@ -179,7 +181,7 @@ class MainViewModel(private val app: HassnApp) : ViewModel() {
                 InstalledApp(
                     packageName = it.activityInfo.packageName,
                     name = it.loadLabel(pm).toString(),
-                    icon = it.loadIcon(pm)
+                    icon = loadAppIcon(it.loadIcon(pm))
                 )
             }
             .filter { it.packageName != Constants.APP_PACKAGE }
@@ -187,5 +189,16 @@ class MainViewModel(private val app: HassnApp) : ViewModel() {
             .sortedBy { it.name.lowercase() }
     } catch (e: Exception) {
         emptyList()
+    }
+
+    private fun loadAppIcon(drawable: Drawable): Bitmap {
+        if (drawable is BitmapDrawable) return drawable.bitmap
+        val width = drawable.intrinsicWidth.coerceAtLeast(1)
+        val height = drawable.intrinsicHeight.coerceAtLeast(1)
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        drawable.setBounds(0, 0, canvas.width, canvas.height)
+        drawable.draw(canvas)
+        return bitmap
     }
 }
