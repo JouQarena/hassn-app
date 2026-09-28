@@ -1,128 +1,192 @@
-<div dir="rtl">
+# 🛡️ DNS Guard & Shield
 
-# حصّن 🛡️
-![CI](https://github.com/JouQarena/hassn-app/actions/workflows/ci.yml/badge.svg)
+A production-ready Android application combining **system-wide Private DNS filtering**
+with a **Reddit-only NSFW accessibility shield** — built entirely with
+**Jetpack Compose (Material 3)**, dark mode only, zero purple, zero placeholders.
 
+| Concern | Guarantee |
+| --- | --- |
+| DNS protection | Android Private DNS (DNS-over-TLS) pinned to a vetted hostname (default `family.adguard-dns.com`) |
+| Reddit NSFW shield | Accessibility overlay covers NSFW content **only** while `com.reddit.frontpage` is in the foreground |
+| Banking-app safety | `Settings.Secure.ACCESSIBILITY_ENABLED` is forced to **0 at all times**, flipping to 1 for the exact seconds Reddit is open, and back to 0 the instant it is not — enforced by *two independent layers* |
+| Data egress | The app declares **no `INTERNET` permission** — nothing ever leaves the device |
 
-**حوِّل نفسك بعيداً عن التشتت — تلقائياً**
+---
 
-تطبيق أندرويد يراقب استخدام تطبيقاتك عبر خدمة الوصول (AccessibilityService). عند فتح تطبيق مُشِتِّت، يرد حصّن تلقائياً حسب إعداداتك: يعرض رسالة تحفيزية، يطلب منك إتمام تحدٍّ، أو يحوّلك مباشرة إلى تطبيق مفيد — أو أيّ تركيبة من ذلك بالترتيب الذي تحدده.
+## Features
 
-</div>
+### Screen 1 — Main Dashboard
+* `#0D47A1` TopAppBar — "🛡️ DNS Guard & Shield" + `🌐 EN` language toggle (**English ↔ Arabic**, full RTL layout mirroring when Arabic is active)
+* **DNS Protection** card: green/red status dot + current hostname in `#64B5F6`
+* **Reddit NSFW Shield** card: `Shield Armed` → `Active now — Reddit is in the foreground`
+* **Permissions Status** card: clickable `✅ / ⚠️` rows for
+  `WRITE_SECURE_SETTINGS`, `PACKAGE_USAGE_STATS`, `Foreground Service`
+* Full-width `#1E88E5` **⚙️ DNS Settings** button and `#2C2C2C`
+  **💻 ADB Setup Guide** outlined button
 
-# Hassn 🛡️
+### Screen 2 — DNS Settings
+Presets (AdGuard Family / AdGuard / Unfiltered / Cloudflare / Cloudflare Families /
+Quad9 / Automatic), validated custom hostname entry, live "Current" status with
+Active/Inactive badge. Applied through Android's Private DNS keys:
 
-**Redirect yourself away from distraction — automatically**
+```
+private_dns_mode      = hostname
+private_dns_specifier = family.adguard-dns.com
+```
 
-An Android app that monitors your app usage through an AccessibilityService. When you open a distracting app, Hassn responds automatically based on your setup: it shows a motivational message, asks you to complete a challenge, redirects you to a productive app — or any combination of those in the order you choose.
-
-## ✨ Features / المميزات
-
-- 📢 **نظام استجابة مرن** — اختار أي تركيبة من (رسالة تحفيزية، تحدٍّ، تحويل) وحدد ترتيب التنفيذ.
-  **Flexible response system** — combine (motivational message, challenge, redirect) in any custom order.
-- 📝 **رسالة تحفيزية مخصصة** — نص، صورة، ألوان، شفافية، حجم خط، مدة عرض.
-  **Custom message** — text, image, colors, opacity, font size, duration.
-- 🎯 **9 أنواع تحديات** بثلاث مستويات صعوبة (Morse Code معطّل افتراضياً).
-  **9 challenge types** across three difficulties (Morse Code disabled by default).
-- 🔄 **تحويل تلقائي** لتطبيق مفيد تختاره.
-  **Automatic redirect** to a productive app you choose.
-- 🔍 **كشف محسّن للوضع الخاص** — Reddit (الوضع المجهول)، Brave (التبويب الخاص)، Chrome (الوضع الخفي) بنظام نقاط متعدد الإشارات، وكلمات مفتاحية مخصصة لأي تطبيق آخر.
-  **Enhanced private-mode detection** — Reddit anonymous, Brave private tab, Chrome incognito via a multi-signal scoring engine, plus custom keywords for any other app.
-- 📱 **مراقبة تطبيقات مخصصة** — أضف أي تطبيق وضعّي (دائماً / كشف الوضع الخاص فقط).
-  **Custom app monitoring** — monitor any app, always or private-mode-only.
-- 🔒 **تحديات منع الإيقاف** — إيقاف الحماية يتطلب اجتياز تحدٍّ متصاعد (سهل ← متوسط ← صعب)، وقفل مؤقت بعد 7 محاولات فاشلة.
-  **Disable-protection challenges** — turning protection off requires passing an escalating challenge, with a temporary lock after 7 failed attempts.
-- 📊 **مراجعة قبل الحذف** — شاشة تُظهر رحلتك (أيام الاستخدام، التحويلات، التحديات، الوقت الموفَّر) قبل التوجه لحذف التطبيق.
-  **Uninstall review** — a screen showing your journey (days used, redirections, challenges, time saved) before you head to uninstall.
-- 🌐 **عربي أولاً** — واجهة RTL كاملة مع تبديل سريع إلى الإنجليزية.
-  **Arabic-first** — full RTL UI with a quick English toggle.
-- 📴 **بلا إنترنت** — كل البيانات محلية (DataStore)، بدون أي أذونات شبكة أو تحليلات.
-  **Fully offline** — all data local (DataStore), no network permissions, no analytics.
-
-## 📸 Screenshots / لقطات شاشة
-
-| | |
-|---|---|
-| ![Main](screenshots/main.png) | ![Challenges](screenshots/challenges.png) |
-
-*(أضف لقطات الشاشة هنا / Add screenshots here)*
-
-## 📦 Installation / التثبيت
-
-1. ثبّت التطبيق (v2.0.0، أندرويد 7.0+).
-   Install the app (v2.0.0, Android 7.0+).
-2. من الشاشة الرئيسية، فعّل **خدمة الوصول**:
-   From the main screen, enable the **accessibility service**:
-   *إعدادات ← الوصولية ← حصّن* → `Settings → Accessibility → Hassn`
-3. امنح إذن **العرض فوق التطبيقات** (لعرض الرسائل والتحديات).
-   Grant the **Draw over other apps** permission (to show messages and challenges).
-4. أضف التطبيقات المشتتة واختر سلوك الاستجابة، ثم شغّل **الحماية**.
-   Add your distracting apps, choose the response behavior, then turn **Protection** on.
-
-## 🔐 Permissions / الأذونات
-
-| الإذن / Permission | السبب / Why |
-|---|---|
-| الوصولية / Accessibility | مراقبة فتح التطبيقات وكشف الوضع الخاص عبر شجرة العنصرات. Monitor app launches and detect private mode via the view tree. |
-| العرض فوق التطبيقات / SYSTEM_ALERT_WINDOW | عرض الرسالة والتحدٍّ، والبقاء النشط لفتح التطبيق المفيد (متطلب أندرويد 10+). Show message/challenge overlays and allow launching the destination app (Android 10+ requirement). |
-| استكمال تشغيل الجهاز / RECEIVE_BOOT_COMPLETED | (مهيّأ لاستئناف المراقبة بعد إعادة التشغيل). Reserved for restarting monitoring after reboot. |
-
-**لا توجد أي أذونات شبكة. التطبيق لا يرسل أي بيانات للخارج.**
-**No network permissions at all. The app never sends data outside the device.**
-
-## 🔨 Build / البناء
+### Screen 3 — ADB Setup Guide
+Three numbered steps with copyable command blocks (`#0A0A0A` background,
+`#80CBC4` text):
 
 ```bash
-# يتطلب: JDK 17 + Gradle 8.0+
-# Requires: JDK 17 + Gradle 8.0+
-gradle wrapper          # إذا لم يكن الـ wrapper موجوداً / if the wrapper is missing
-./gradlew assembleDebug
+adb shell pm grant com.dnsguard.shield android.permission.WRITE_SECURE_SETTINGS
+adb shell appops set com.dnsguard.shield GET_USAGE_STATS allow
+
+# Verify the safety guarantee — expected output: 0
+adb shell settings get secure accessibility_enabled
 ```
 
-- AGP 8.1.0 · Kotlin 1.9.0 · Compose Compiler 1.5.3 · minSdk 24 · targetSdk 34
+---
 
-## 🏗️ Architecture / البنية
-
-- **MVVM** — Jetpack Compose (Material 3) + ViewModels (Kotlin Coroutines & Flow).
-- **DataStore Preferences** للتخزين (بدون قاعدة بيانات) مع kotlinx.serialization لنماذج الإعدادات.
-  **DataStore Preferences** for persistence (no database) with kotlinx-serialized settings models.
-- **Dependency injection يدوي** عبر `HassnApp` (Application) — بدون مكتبات DI.
-  **Manual DI** through `HassnApp` — no DI frameworks.
-- **الدفع الأساسي / Core flow:**
-  `HassnAccessibilityService.onAccessibilityEvent` → debounce (2s) → mode check
-  (ALWAYS / PRIVATE_ONLY → `PrivacyDetectionEngine`) → `ResponseExecutor`
-  (message overlay → challenge overlay → GLOBAL_ACTION_HOME + destination launch).
-- **كشف الوضع الخاص / Privacy detection:** `PrivacyDetector` interface مع أوزان إشارات
-  (Keyword 40 / ResourceId 30 / Icon 25 / Button 20) وعتبات لكل متصفح، مع كاش 2 ثانية.
-  `PrivacyDetector` interface with weighted signals and per-browser thresholds, 2s result cache.
-- كل عمليات `AccessibilityNodeInfo` داخل try-catch مع `recycle()` في finally.
-  All node operations are try-catch wrapped with `recycle()` in finally blocks.
+## 🏦 Accessibility safety model (the core guarantee)
 
 ```
-app/src/main/java/com/hassn/app/
-├── HassnApp.kt / MainActivity.kt
-├── data/        # Models + DataStore repositories
-├── detection/   # Privacy detectors + scoring engine
-├── service/     # AccessibilityService + ResponseExecutor
-├── ui/          # screens/ components/ challenges/ theme/ navigation
-├── viewmodel/   # Main / MessageSettings / Challenge ViewModels
-└── util/        # Constants + node traversal extensions
+                      ┌────────────────────────────────────────────┐
+                      │  ACCESSIBILITY_ENABLED (global switch)    │
+ time ───────────────►│  default ..................... 0  (OFF)    │
+                      │  Reddit moves to foreground .. 1  (ON)     │
+                      │  Reddit leaves / screen off .. 0  (OFF)    │
+                      └────────────────────────────────────────────┘
 ```
 
-## 🧪 Tests / الاختبارات
+Two independent enforcement layers make the guarantee resilient:
 
-- `gradle test` — اختبارات وحدة: الكاشفات الأربعة، منطق ResponseExecutor، المستودعات (DataStore حقيقي على ملف مؤقت)، وViewModels.
-  Unit tests: detectors, ResponseExecutor logic, repositories (real DataStore on a temp file), ViewModels.
-- `gradle connectedAndroidTest` — اختبار إطلاق (smoke test).
+1. **`ShieldWatchdogService`** (foreground service, 750 ms poll)
+   * reconstructs the foreground package from `UsageStatsManager`
+   * writes `ENABLED_ACCESSIBILITY_SERVICES += com.dnsguard.shield/.service.ShieldAccessibilityService`
+     and `ACCESSIBILITY_ENABLED = 1` **only** when the poll observes
+     `com.reddit.frontpage` *and* the display is on
+   * forces `ACCESSIBILITY_ENABLED = 0` on every other observation
+   * if `PACKAGE_USAGE_STATS` is missing it can never prove Reddit is in front,
+     so the switch stays at 0 forever (failure direction is always the safe one)
 
-> **ملاحظة / Note:** حماية الحذف عبر Device Admin (feature 5 في المواصفات) **لم تُفعّل** عمداً لتجنّب احتكاك سياسة Google Play —
-> اعتمدنا النسخة الخفيفة (شاشة مراجعة + إحصائيات) فقط، دون أي صلاحية مسؤول.
-> The Device Admin uninstall block was deliberately **not** enabled (Google Play policy friction) — we kept the lightweight version (review screen + stats) only, with no admin privileges.
+2. **`ShieldAccessibilityService`** (event-driven, reacts in milliseconds)
+   * any accessibility event whose package is **not** `com.reddit.frontpage`
+     triggers: hide overlay → `ACCESSIBILITY_ENABLED = 0` → `disableSelf()`
+   * `ACTION_SCREEN_OFF` does the same
+   * `onDestroy` re-asserts 0 as a last line of defence
 
-## 📄 License / الرخصة
+While alive, the service scans Reddit's node tree (exact-match `NSFW` chip
+detection, 400-node walk cap, 250 ms debounce) and raises a full-screen
+`TYPE_ACCESSIBILITY_OVERLAY` shield with a **"Reveal for 10 seconds"** button.
+Touches are consumed — nothing falls through to the content underneath.
 
-[MIT](LICENSE) © JouQarena
+---
 
-## 🔗 Repository / المستودع
+## Building
 
-**https://github.com/JouQarena/hassn-app**
+### CI (zero configuration)
+
+Every push and pull request runs
+[`.github/workflows/build.yml`](.github/workflows/build.yml):
+
+```bash
+./gradlew --no-daemon lintDebug testDebugUnitTest assembleDebug
+```
+
+The repository contains the full Gradle wrapper (`gradlew`, `gradlew.bat`,
+`gradle-wrapper.jar`, `gradle-wrapper.properties`), so CI needs no extra setup
+beyond JDK 17. The debug APK and all reports are uploaded as artifacts.
+
+### Locally
+
+```bash
+# JDK 17 required. Point Gradle at your SDK either through the ANDROID_HOME
+# environment variable or a git-ignored local.properties file:
+#     echo "sdk.dir=/path/to/Android/Sdk" > local.properties
+./gradlew assembleDebug          # APK → app/build/outputs/apk/debug/
+./gradlew testDebugUnitTest      # JVM unit tests
+./gradlew lintDebug              # Android Lint
+```
+
+### Release signing
+
+No keystores are ever committed. To produce a signed release:
+
+```bash
+keytool -genkey -v -keystore release.jks -keyalg RSA -keysize 2048 \
+        -validity 10000 -alias dns_guard
+# then configure signingConfigs in app/build.gradle.kts (see android.signingConfigs)
+./gradlew assembleRelease
+```
+
+---
+
+## 📲 First-run setup (once, over ADB)
+
+| # | Command | Why |
+| --- | --- | --- |
+| 1 | `adb shell pm grant com.dnsguard.shield android.permission.WRITE_SECURE_SETTINGS` | Apply Private DNS + flip the accessibility master switch |
+| 2 | `adb shell appops set com.dnsguard.shield GET_USAGE_STATS allow` | Detect the foreground package (Reddit vs everything else) |
+
+Then grant **Usage Access** manually if you prefer UI, start the app, press the
+**Foreground Service** row, and open Reddit — the dashboard shows
+*Active now* and `adb shell settings get secure accessibility_enabled` reads `1`
+only while Reddit is open, `0` at every other moment.
+
+---
+
+## Architecture
+
+```
+app/src/main/java/com/dnsguard/shield/
+├── DnsGuardApplication.kt        # notification channel + process-wide prefs
+├── MainActivity.kt               # Compose host, language provider
+├── core/
+│   ├── AccessibilitySwitch.kt    # THE single authority for the 0/1 flip
+│   ├── DnsManager.kt             # private_dns_mode / private_dns_specifier
+│   ├── Permissions.kt            # side-effect-free permission checks
+│   ├── Prefs.kt                  # language persistence
+│   └── ShieldRuntime.kt          # live phase StateFlow for the dashboard
+├── receiver/
+│   └── BootCompletedReceiver.kt  # watchdog restart after reboot
+├── service/
+│   ├── ShieldAccessibilityService.kt  # Reddit-only, self-disabling
+│   ├── ShieldWatchdogService.kt       # 750 ms foreground poll + FGS
+│   └── overlay/NsfwOverlay.kt         # TYPE_ACCESSIBILITY_OVERLAY shield
+├── ui/
+│   ├── components/               # StatusCard, StatusDot, CodeBlock, …
+│   ├── i18n/                     # Strings interface + EN/AR implementations
+│   ├── navigation/AppNav.kt      # 3-route Navigation-Compose graph
+│   ├── screens/                  # Dashboard, DnsSettings, AdbGuide
+│   └── theme/                    # exact palette, zero purple by construction
+└── util/
+    └── DnsHostname.kt            # RFC-952 validation (unit-tested)
+```
+
+## Color palette
+
+| Token | Hex | Use |
+| --- | --- | --- |
+| TopBarBlue | `#0D47A1` | TopAppBar |
+| PrimaryBlue | `#1E88E5` | Buttons, selection |
+| AccentLightBlue | `#64B5F6` | Hostnames, accents |
+| AppBackground | `#121212` | Window background |
+| CardSurface | `#1E1E1E` | Cards |
+| BorderAndInputBg | `#2C2C2C` | Borders, inputs, outlined button |
+| InputBorder | `#424242` | Input outlines |
+| TextPrimary | `#E0E0E0` | Primary text |
+| TextSecondary | `#9E9E9E` | Secondary text |
+| StatusGreen | `#66BB6A` | Active/granted |
+| WarningOrange | `#FFA726` | Attention |
+| DangerRed | `#EF5350` | Inactive/error |
+| CodeBlockBg | `#0A0A0A` | Code blocks |
+| CodeBlockText | `#80CBC4` | Code text |
+
+Every one of the 36 Material 3 `ColorScheme` slots is written out explicitly in
+`ui/theme/Theme.kt` — no default (purple) value can ever leak in.
+
+## License
+
+Provided as-is for personal use. Use responsibly and in accordance with local
+laws and the terms of service of the applications you install it alongside.
