@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Exact palette from the product spec — dark mode only, zero purple. -->
+    <color name="app_background">#121212</color>
+    <color name="top_bar_blue">#0D47A1</color>
+
+    <style name="Theme.DnsGuard" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/app_background</item>
+        <item name="android:statusBarColor">@color/top_bar_blue</item>
+        <item name="android:navigationBarColor">@color/app_background</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:colorAccent">#1E88E5</item>
+        <item name="android:windowActionModeOverlay">true</item>
+    </style>
+
+</resources>

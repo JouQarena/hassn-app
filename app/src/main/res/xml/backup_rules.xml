@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Traditional (pre-Android 12) backup rules. -->
+<full-backup-content>
+    <!-- Language preference is cheap to re-sync; nothing sensitive is backed up. -->
+    <include domain="sharedpref" path="." />
+</full-backup-content>

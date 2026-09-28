@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+        WRITE_SECURE_SETTINGS:
+        Lets the app write Android's Private DNS hostname and toggle the global
+        accessibility flag. Android only grants this permission through an
+        `adb shell pm grant` command (see the in-app ADB Setup Guide).
+
+        PACKAGE_USAGE_STATS:
+        Lets the foreground watchdog observe which application is currently in the
+        foreground (required so the accessibility shield can be armed for Reddit
+        only). Granted through the Usage Access settings screen or via adb appops.
+
+        RECEIVE_BOOT_COMPLETED:
+        Restarts the watchdog after a device reboot so the shield keeps enforcing
+        its "disabled except while Reddit is in the foreground" guarantee.
+
+        FOREGROUND_SERVICE / FOREGROUND_SERVICE_SPECIAL_USE / POST_NOTIFICATIONS:
+        Standard requirements for the long-running watchdog service on modern
+        Android versions.
+    -->
+    <uses-permission
+        android:name="android.permission.WRITE_SECURE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission
+        android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application
+        android:name=".DnsGuardApplication"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.DnsGuard"
+        tools:targetApi="34">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.DnsGuard"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!--
+            The accessibility shield. The manifest declares it normally; it is
+            *connected* by the system only while the watchdog has written
+            `Settings.Secure.ACCESSIBILITY_ENABLED = 1`, which it does exclusively
+            during the exact seconds when `com.reddit.frontpage` is the foreground
+            application. See ShieldWatchdogService for the full state machine.
+        -->
+        <service
+            android:name=".service.ShieldAccessibilityService"
+            android:exported="true"
+            android:label="@string/accessibility_service_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+
+        <!-- Foreground watchdog that polls the foreground package and flips the
+             accessibility master switch on/off around Reddit sessions. -->
+        <service
+            android:name=".service.ShieldWatchdogService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Continuous monitoring of the foreground application so the accessibility shield can be enabled only while the official Reddit app is open, and forced back to Settings.Secure.ACCESSIBILITY_ENABLED=0 the moment it is not." />
+        </service>
+
+        <!-- exported=false still receives system broadcasts (BOOT_COMPLETED is
+             sent by the system, which bypasses the export gate). -->
+        <receiver
+            android:name=".receiver.BootCompletedReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+</manifest>

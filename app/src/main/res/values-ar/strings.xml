@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Arabic (RTL) translations for strings that Android itself renders —
+    the launcher-facing accessibility service name/description shown in the
+    system Settings → Accessibility screen. Picked automatically on devices
+    whose system locale is Arabic; the in-app toggle handles the rest.
+-->
+<resources>
+    <string name="accessibility_service_label">درع Reddit الخاص بـ DNS Guard</string>
+    <string name="accessibility_service_description">يراقب تطبيق Reddit الرسمي ويحجب محتوى NSFW خلف طبقة حجب عندما يكون Reddit في المقدمة. للأمان، تُعطَّل هذه الخدمة (Settings.Secure.ACCESSIBILITY_ENABLED = 0) في كل لحظة أخرى — لا تعمل أبدًا أثناء فتح أي تطبيق آخر، بما فيها تطبيقات البنوك.</string>
+</resources>
