@@ -104,7 +104,7 @@ interface Strings {
     val dnsInactiveBadge: String
     val dnsNote: String
 
-    // ── Setup Guide (no commands — Android's own screens only) ─────────────
+    // ── Setup Guide ────────────────────────────────────────────────────────
     val setupGuideTitle: String
     val setupIntro: String
     val step1Title: String
@@ -191,13 +191,13 @@ object EnglishStrings : Strings {
     override val dnsNote = "Set once in Android's Private DNS screen (DNS-over-TLS); this dashboard reads the live value."
 
     override val setupGuideTitle = "Setup Guide"
-    override val setupIntro = "Four core steps, plus optional uninstall protection — all through Android’s own screens. No computer or commands."
+    override val setupIntro = "Four core steps plus optional uninstall protection. One ADB command grants DNS restoration once; no root is required."
     override val step1Title = "Step 1 — DNS protection"
-    override val step1Body = "Copy a hostname and paste it into Android's Private DNS dialog. Android remembers it forever."
+    override val step1Body = "Choose a hostname and paste it into Private DNS. To restore it automatically after changes, run once: adb shell pm grant com.dnsguard.shield android.permission.WRITE_SECURE_SETTINGS"
     override val step2Title = "Step 2 — Usage access"
     override val step2Body = "Lets the watchdog see which app is in front, so the dashboard can tell you when Reddit is open."
     override val step3Title = "Step 3 — Arm the shield"
-    override val step3Body = "Open Accessibility and switch ON «DNS Guard Reddit Shield». The service removes itself the moment any other app appears — it only ever runs while Reddit is in front."
+    override val step3Body = "Open Accessibility and switch ON «DNS Guard Reddit Shield». The permission stays enabled; the service processes screen content only while Reddit is in front."
     override val step4Title = "Step 4 — Notifications"
     override val step4Body = "Optional: allow notifications so the watchdog can show the shield's live state."
     override val openUsageBtn = "Open Usage Access settings"
@@ -205,7 +205,7 @@ object EnglishStrings : Strings {
     override val armHint = "Find «DNS Guard Reddit Shield» in the list and toggle it ON."
     override val allowNotifBtn = "Allow notifications"
     override val safetyTitle = "Safety model"
-    override val safetyBody = "Every permission is granted through Android's own screens — never a computer or a shell command. The shield runs only while Reddit is in the foreground and removes itself from the enabled accessibility services the instant any other app appears. DNS is applied by Android itself, and the app declares no INTERNET permission — nothing leaves the device."
+    override val safetyBody = "DNS restoration uses WRITE_SECURE_SETTINGS granted once through ADB. Accessibility stays enabled, but the Reddit shield ignores every app outside Reddit; the separate guard watches only protected Settings pages. The app declares no INTERNET permission."
 
     override val overlayTitle = "🛡️ NSFW content shielded"
     override val overlayBody = "DNS Guard hid this content while Reddit is in the foreground."
@@ -311,9 +311,9 @@ object ArabicStrings : Strings {
     override val dnsNote = "يُضبط مرة واحدة في شاشة DNS الخاص في Android (DNS-over-TLS)؛ تعرض لوحة المعلومات القيمة الحية."
 
     override val setupGuideTitle = "دليل الإعداد"
-    override val setupIntro = "أربع خطوات أساسية، مع حماية اختيارية لإلغاء التثبيت — كلها عبر شاشات أندرويد نفسها، بلا حاسوب وبلا أوامر."
+    override val setupIntro = "أربع خطوات أساسية مع حماية اختيارية لإلغاء التثبيت. يلزم أمر ADB واحد مرة واحدة لاستعادة DNS تلقائيًا، ولا يلزم Root."
     override val step1Title = "الخطوة 1 — حماية DNS"
-    override val step1Body = "انسخ اسم مضيف والصقه في نافذة DNS الخاص في Android. يتذكره النظام للأبد."
+    override val step1Body = "اختر اسم المضيف والصقه في DNS الخاص. للاستعادة التلقائية نفّذ مرة واحدة: adb shell pm grant com.dnsguard.shield android.permission.WRITE_SECURE_SETTINGS"
     override val step2Title = "الخطوة 2 — الوصول لبيانات الاستخدام"
     override val step2Body = "يتيح للمراقب معرفة التطبيق في المقدمة، ليخبرك لوحة المعلومات عندما يُفتح Reddit."
     override val step3Title = "الخطوة 3 — تسليح الدرع"
@@ -325,7 +325,7 @@ object ArabicStrings : Strings {
     override val armHint = "ابحث عن «درع Reddit الخاص بـ DNS Guard» في القائمة وفعّله."
     override val allowNotifBtn = "السماح بالإشعارات"
     override val safetyTitle = "نموذج الأمان"
-    override val safetyBody = "كل الأذونات تُمنح عبر شاشات أندرويد نفسها — لا حاسوب ولا أمر سطر أوامر أبدًا. يعمل الدرع فقط أثناء تواجد Reddit في المقدمة ويُلغي نفسه من خدمات الوصولية المفعّلة لحظة ظهور أي تطبيق آخر. يطبّق Android الـDNS بنفسه، والتطبيق لا يصرّح بإذن INTERNET — لا يغادر أي شيء الجهاز."
+    override val safetyBody = "تستخدم استعادة DNS إذن WRITE_SECURE_SETTINGS الممنوح مرة واحدة عبر ADB. تظل إمكانية الوصول مفعّلة، لكن درع Reddit يتجاهل كل التطبيقات خارجه، وتراقب خدمة الحماية المنفصلة صفحات الإعدادات المحمية فقط. التطبيق لا يطلب إذن INTERNET."
 
     override val overlayTitle = "🛡️ تم حجب محتوى NSFW"
     override val overlayBody = "حجب DNS Guard هذا المحتوى لأن Reddit في المقدمة."

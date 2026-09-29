@@ -49,6 +49,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.dnsguard.shield.DnsGuardApplication
 import com.dnsguard.shield.LocalStrings
 import com.dnsguard.shield.core.DnsManager
 import com.dnsguard.shield.ui.components.Badge
@@ -124,6 +125,9 @@ fun DnsSettingsScreen(onBack: () -> Unit) {
             return
         }
         errorText = null
+        // Persist before leaving for Settings so the watchdog can restore this
+        // exact choice even if Android kills the activity.
+        DnsGuardApplication.prefs().protectedDnsHostname = normalized
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.setPrimaryClip(ClipData.newPlainText("Private DNS hostname", normalized))
         val opened = DnsManager.openPrivateDnsSettings(context)

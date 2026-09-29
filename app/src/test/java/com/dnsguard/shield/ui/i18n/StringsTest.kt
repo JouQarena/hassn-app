@@ -82,9 +82,9 @@ class StringsTest {
     }
 
     @Test
-    fun `zero-command promise is stated in the guide copy`() {
-        assertTrue(EnglishStrings.setupIntro.contains("No computer or commands"))
-        assertTrue(ArabicStrings.setupIntro.contains("بلا حاسوب"))
+    fun `adb permission requirement is stated in the guide copy`() {
+        assertTrue(EnglishStrings.step1Body.contains("WRITE_SECURE_SETTINGS"))
+        assertTrue(ArabicStrings.step1Body.contains("WRITE_SECURE_SETTINGS"))
         assertTrue(EnglishStrings.step3Body.contains("DNS Guard Reddit Shield"))
     }
 }
