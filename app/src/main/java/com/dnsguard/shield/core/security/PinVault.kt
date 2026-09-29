@@ -30,6 +30,7 @@ object PinVault {
     private const val FILE_FALLBACK = "dnsguard_pin_vault_fallback"
 
     private const val KEY_HASH = "pin_hash"
+    private const val KEY_RECOVERY_HASH = "recovery_hash"
     private const val KEY_FAILS = "pin_fails"
     private const val KEY_LOCKED_UNTIL = "pin_locked_until"
     private const val KEY_SUSPENDED_UNTIL = "guard_suspended_until"
@@ -142,6 +143,40 @@ object PinVault {
             return PinPolicy.SetOutcome.StorageError
         }
         return outcome
+    }
+
+    /**
+     * Creates a one-time recovery code and stores only its BCrypt hash. Call
+     * immediately after first PIN enrollment and show the returned code once.
+     */
+    @Synchronized
+    fun createRecoveryCode(): String? {
+        val bytes = ByteArray(10)
+        java.security.SecureRandom().nextBytes(bytes)
+        val code = bytes.joinToString("") { "%02X".format(it) }.chunked(5).joinToString("-")
+        val saved = runCatching {
+            prefs().edit().putString(KEY_RECOVERY_HASH, PinHasher.hash(code)).commit()
+        }.getOrDefault(false)
+        return code.takeIf { saved }
+    }
+
+    /** Single-use recovery: replaces the PIN and burns the recovery code. */
+    @Synchronized
+    fun resetWithRecoveryCode(code: String, newPin: String, confirmPin: String): PinPolicy.SetOutcome {
+        val validation = PinPolicy.setup(newPin, confirmPin)
+        if (validation != PinPolicy.SetOutcome.Ok) return validation
+        val recoveryHash = runCatching { prefs().getString(KEY_RECOVERY_HASH, null) }.getOrNull()
+            ?: return PinPolicy.SetOutcome.WrongCurrent
+        if (!PinHasher.verify(code.trim().uppercase(), recoveryHash)) return PinPolicy.SetOutcome.WrongCurrent
+        val saved = runCatching {
+            prefs().edit()
+                .putString(KEY_HASH, PinHasher.hash(newPin))
+                .remove(KEY_RECOVERY_HASH)
+                .putInt(KEY_FAILS, 0)
+                .putLong(KEY_LOCKED_UNTIL, 0L)
+                .commit()
+        }.getOrDefault(false)
+        return if (saved) PinPolicy.SetOutcome.Ok else PinPolicy.SetOutcome.StorageError
     }
 
     /** Remaining milliseconds of an active lockout (0 when unlocked). */

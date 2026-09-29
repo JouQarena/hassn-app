@@ -17,6 +17,7 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import com.dnsguard.shield.DnsGuardApplication
 import com.dnsguard.shield.R
+import com.dnsguard.shield.core.DnsManager
 import com.dnsguard.shield.core.Permissions
 import com.dnsguard.shield.core.ShieldPolicy
 import com.dnsguard.shield.core.ShieldRuntime
@@ -32,20 +33,9 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 /**
- * Foreground watchdog — the app's status observer in **standard mode**
- * (zero ADB, no `Settings.Secure` writes anywhere).
- *
- * What it still does:
- *  - polls the foreground package via `UsageStatsManager` (granted through
- *    Android's normal Usage Access screen) and feeds `ShieldRuntime` so the
- *    dashboard can say "Reddit is open right now";
- *  - keeps a low-importency notification showing the live shield state;
- *  - stays alive so the process is ready the moment the user opens Reddit.
- *
- * What it deliberately no longer does: flip `ACCESSIBILITY_ENABLED`. That
- * needs the ADB-only WRITE_SECURE_SETTINGS permission; in standard mode the
- * accessibility service itself removes its component (disableSelf) the instant
- * Reddit is not in front — see [ShieldPolicy].
+ * Foreground watchdog. It observes the foreground package for dashboard state
+ * and continuously restores the user-selected Private DNS hostname whenever
+ * WRITE_SECURE_SETTINGS has been granted once through ADB.
  */
 class ShieldWatchdogService : Service() {
 
@@ -91,6 +81,14 @@ class ShieldWatchdogService : Service() {
 
         // Feeds the dashboard ("Reddit open now") and demotes a stale ACTIVE.
         ShieldRuntime.setRedditVisible(redditVisible && canObserve)
+
+        // WRITE_SECURE_SETTINGS is granted once through ADB. Never invent a
+        // default here: only enforce a hostname the user selected in the app.
+        DnsGuardApplication.prefs().protectedDnsHostname?.let { hostname ->
+            if (!DnsManager.enforceProtectedHostname(this, hostname)) {
+                Log.d(TAG, "Private DNS enforcement unavailable or unsuccessful")
+            }
+        }
     }
 
     /**

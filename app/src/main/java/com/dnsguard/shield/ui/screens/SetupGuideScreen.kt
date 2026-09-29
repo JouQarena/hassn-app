@@ -173,12 +173,13 @@ fun SetupGuideScreen(onBack: () -> Unit) {
                 number = 1,
                 title = strings.step1Title,
                 body = strings.step1Body,
-                done = dnsOk,
+                done = dnsOk && DnsManager.canWriteSecureSettings(context),
                 buttonLabel = strings.dnsCopyOpenBtn,
                 onButtonClick = {
                     val openDns: () -> Unit = {
                         val host = DnsManager.currentStatus(context).specifier
                             ?: "family.adguard-dns.com"
+                        com.dnsguard.shield.DnsGuardApplication.prefs().protectedDnsHostname = host
                         clipboard.setText(AnnotatedString(host))
                         DnsManager.openPrivateDnsSettings(context)
                         scope.launch {
@@ -189,7 +190,8 @@ fun SetupGuideScreen(onBack: () -> Unit) {
                     if (PinVault.isPinSet()) {
                         pinGate.request(PinGate.Purpose.DNS_SETTINGS, openDns)
                     } else openDns()
-                }
+                },
+                hint = "adb shell pm grant com.dnsguard.shield android.permission.WRITE_SECURE_SETTINGS"
             )
 
             // ── Step 2: Usage access ──────────────────────────────────────

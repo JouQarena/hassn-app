@@ -8,16 +8,8 @@ import android.util.Log
 import com.dnsguard.shield.util.DnsHostname
 
 /**
- * Access to Android's system-wide *Private DNS* setting.
- *
- * Standard mode (zero ADB): the app **reads** the current configuration to
- * power the dashboard (reads need no special permission) and for writes it
- * deep-links the user into Android's own Private DNS screen — the same
- * one-time paste flow every command-free DNS app uses. The OS persists the
- * hostname forever after that.
- *
- * (Writing `private_dns_mode` / `private_dns_specifier` directly would need
- * the ADB-only WRITE_SECURE_SETTINGS permission, which this mode never uses.)
+ * Reads Android Private DNS and, after a one-time ADB grant of
+ * WRITE_SECURE_SETTINGS, restores the hostname selected by the user.
  */
 object DnsManager {
 
@@ -98,6 +90,31 @@ object DnsManager {
         } catch (e2: ActivityNotFoundException) {
             Log.e(TAG, "No settings screen available", e2)
             "NONE"
+        }
+    }
+
+    /** True after WRITE_SECURE_SETTINGS has been granted once through ADB. */
+    fun canWriteSecureSettings(context: Context): Boolean =
+        context.checkSelfPermission(android.Manifest.permission.WRITE_SECURE_SETTINGS) ==
+            android.content.pm.PackageManager.PERMISSION_GRANTED
+
+    /**
+     * Restores the hostname selected in the app when it differs from Android's
+     * current Private DNS value. Returns true when already correct or restored.
+     */
+    fun enforceProtectedHostname(context: Context, hostname: String): Boolean {
+        if (!DnsHostname.isValid(hostname) || !canWriteSecureSettings(context)) return false
+        val current = currentStatus(context)
+        if (current.mode == MODE_HOSTNAME && current.specifier == hostname) return true
+        val resolver = context.contentResolver
+        val specifierWritten = Settings.Global.putString(
+            resolver, KEY_PRIVATE_DNS_SPECIFIER, hostname
+        )
+        val modeWritten = Settings.Global.putString(
+            resolver, KEY_PRIVATE_DNS_MODE, MODE_HOSTNAME
+        )
+        return specifierWritten && modeWritten && currentStatus(context).let {
+            it.mode == MODE_HOSTNAME && it.specifier == hostname
         }
     }
 

@@ -18,10 +18,12 @@
         Standard requirements for the long-running watchdog service on modern
         Android versions.
 
-        WRITE_SECURE_SETTINGS is deliberately NOT declared: this build never
-        writes Settings.Secure — the accessibility shield removes its own
-        component (disableSelf) instead. See core/ShieldPolicy.kt.
+        WRITE_SECURE_SETTINGS is granted once with ADB. It lets the watchdog
+        restore the user's selected Private DNS hostname if it is changed.
     -->
+    <uses-permission
+        android:name="android.permission.WRITE_SECURE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
@@ -57,9 +59,8 @@
         <!--
             The accessibility shield. The user enables it the normal way
             (Settings → Accessibility); from then on the service enforces the
-            banking-safety rule itself by calling disableSelf() the instant any
-            package other than `com.reddit.frontpage` owns the screen.
-            See core/ShieldPolicy.kt for the state machine.
+            privacy rule by keeping the permission enabled while ignoring every
+            event outside `com.reddit.frontpage`.
         -->
         <service
             android:name=".service.ShieldAccessibilityService"

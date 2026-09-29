@@ -18,7 +18,15 @@ class Prefs(context: Context) {
             prefs.edit().putString(KEY_LANGUAGE, value.code).apply()
         }
 
+    /** Last Private DNS hostname explicitly chosen inside the app. */
+    var protectedDnsHostname: String?
+        get() = prefs.getString(KEY_PROTECTED_DNS_HOSTNAME, null)
+        set(value) {
+            prefs.edit().putString(KEY_PROTECTED_DNS_HOSTNAME, value).commit()
+        }
+
     private companion object {
         const val KEY_LANGUAGE = "app_language"
+        const val KEY_PROTECTED_DNS_HOSTNAME = "protected_dns_hostname"
     }
 }

@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,7 +42,9 @@ import com.dnsguard.shield.ui.i18n.stringsFor
 import com.dnsguard.shield.ui.navigation.DnsGuardNavHost
 import com.dnsguard.shield.ui.theme.DnsGuardTheme
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 import kotlinx.coroutines.withContext
 
 /** Composition-local accessor for the active [Strings] bundle. */
@@ -123,6 +126,23 @@ private fun PinGateDialog(gate: PinGate) {
     var pin by remember(request) { mutableStateOf("") }
     var error by remember(request) { mutableStateOf<String?>(null) }
     var busy by remember(request) { mutableStateOf(false) }
+    val hardChallenge = request.purpose == PinGate.Purpose.DEACTIVATE_ADMIN
+    val challenge by remember(request) {
+        mutableStateOf(
+            Triple(Random.nextInt(12, 50), Random.nextInt(6, 30), Random.nextInt(1000, 9999))
+        )
+    }
+    val waitSeconds by remember(request) { mutableStateOf(Random.nextInt(30, 91)) }
+    var secondsLeft by remember(request) { mutableStateOf(waitSeconds) }
+    var mathAnswer by remember(request) { mutableStateOf("") }
+    var phraseAnswer by remember(request) { mutableStateOf("") }
+    val requiredPhrase = "REMOVE ${challenge.third}"
+    LaunchedEffect(request) {
+        while (secondsLeft > 0) {
+            delay(1_000)
+            secondsLeft--
+        }
+    }
 
     AlertDialog(
         onDismissRequest = { if (!busy) gate.cancel() },
@@ -130,6 +150,28 @@ private fun PinGateDialog(gate: PinGate) {
         text = {
             Column {
                 Text(strings.pinDialogUnlockBody)
+                if (hardChallenge) {
+                    Text(
+                        if (secondsLeft > 0) "Wait $secondsLeft seconds before continuing"
+                        else "Waiting complete"
+                    )
+                    Text("Solve: ${challenge.first} + ${challenge.second} = ?")
+                    OutlinedTextField(
+                        value = mathAnswer,
+                        onValueChange = { mathAnswer = it; error = null },
+                        label = { Text("Answer") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Text("Type exactly: $requiredPhrase")
+                    OutlinedTextField(
+                        value = phraseAnswer,
+                        onValueChange = { phraseAnswer = it; error = null },
+                        label = { Text("Confirmation phrase") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
                 OutlinedTextField(
                     value = pin,
                     onValueChange = { pin = it; error = null },
@@ -142,7 +184,15 @@ private fun PinGateDialog(gate: PinGate) {
             }
         },
         confirmButton = {
-            TextButton(enabled = !busy, onClick = {
+            TextButton(enabled = !busy && (!hardChallenge || secondsLeft == 0), onClick = {
+                if (hardChallenge && (
+                        mathAnswer.toIntOrNull() != challenge.first + challenge.second ||
+                            phraseAnswer != requiredPhrase
+                    )
+                ) {
+                    error = "Complete both random challenges exactly"
+                    return@TextButton
+                }
                 if (PinPolicy.validate(pin) != PinPolicy.Strength.OK) {
                     error = strings.pinDialogErrorWeak
                     return@TextButton
@@ -199,23 +249,53 @@ fun MasterPinDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val changing = remember { PinVault.isPinSet() }
+    var recovering by remember { mutableStateOf(false) }
     var current by remember { mutableStateOf("") }
+    var recoveryInput by remember { mutableStateOf("") }
     var next by remember { mutableStateOf("") }
     var confirm by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
+    var recoveryCode by remember { mutableStateOf<String?>(null) }
+
+    recoveryCode?.let { code ->
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text("Recovery code") },
+            text = {
+                Column {
+                    Text("Save this code somewhere safe. It is shown once and can reset a forgotten PIN.")
+                    Text(code)
+                }
+            },
+            confirmButton = {
+                Button(onClick = { recoveryCode = null; onDismiss() }) { Text("I saved it") }
+            }
+        )
+        return
+    }
 
     AlertDialog(
         onDismissRequest = { if (!busy) onDismiss() },
         title = { Text(if (changing) strings.pinDialogChangeTitle else strings.pinDialogSetupTitle) },
         text = {
             Column {
-                if (changing) OutlinedTextField(
+                if (changing && !recovering) OutlinedTextField(
                     value = current, onValueChange = { current = it; error = null },
                     label = { Text(strings.pinDialogCurrentField) },
                     visualTransformation = PasswordVisualTransformation(),
                     singleLine = true, modifier = Modifier.fillMaxWidth()
                 )
+                if (changing && recovering) OutlinedTextField(
+                    value = recoveryInput,
+                    onValueChange = { recoveryInput = it; error = null },
+                    label = { Text("Recovery code") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (changing) TextButton(onClick = { recovering = !recovering; error = null }) {
+                    Text(if (recovering) "Use current PIN" else "Forgot PIN? Use recovery code")
+                }
                 OutlinedTextField(
                     value = next, onValueChange = { next = it; error = null },
                     label = { Text(strings.pinDialogNewField) },
@@ -237,18 +317,26 @@ fun MasterPinDialog(onDismiss: () -> Unit) {
         confirmButton = {
             TextButton(enabled = !busy, onClick = {
                 busy = true
-                val c = current; val n = next; val conf = confirm
-                current = ""; next = ""; confirm = ""
+                val c = current; val recovery = recoveryInput; val n = next; val conf = confirm
+                current = ""; recoveryInput = ""; next = ""; confirm = ""
                 scope.launch {
                     val outcome = withContext(Dispatchers.Default) {
-                        if (changing) PinVault.changePin(c, n, conf)
-                        else PinVault.setPin(n, conf)
+                        when {
+                            changing && recovering -> PinVault.resetWithRecoveryCode(recovery, n, conf)
+                            changing -> PinVault.changePin(c, n, conf)
+                            else -> PinVault.setPin(n, conf)
+                        }
                     }
                     busy = false
                     when (outcome) {
                         PinPolicy.SetOutcome.Ok -> {
                             ProtectionRuntime.refresh(context)
-                            onDismiss()
+                            if (changing) {
+                                onDismiss()
+                            } else {
+                                recoveryCode = PinVault.createRecoveryCode()
+                                if (recoveryCode == null) error = strings.protectionStorageDegraded
+                            }
                         }
                         is PinPolicy.SetOutcome.Invalid -> error = strings.pinDialogErrorWeak
                         PinPolicy.SetOutcome.Mismatch -> error = strings.pinDialogErrorMismatch
