@@ -83,7 +83,7 @@ class StringsTest {
 
     @Test
     fun `zero-command promise is stated in the guide copy`() {
-        assertTrue(EnglishStrings.setupIntro.contains("no computer, no commands"))
+        assertTrue(EnglishStrings.setupIntro.contains("No computer or commands"))
         assertTrue(ArabicStrings.setupIntro.contains("بلا حاسوب"))
         assertTrue(EnglishStrings.step3Body.contains("DNS Guard Reddit Shield"))
     }

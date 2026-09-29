@@ -4,6 +4,7 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import com.dnsguard.shield.core.Prefs
+import com.dnsguard.shield.core.security.PinVault
 import com.dnsguard.shield.ui.i18n.stringsFor
 
 /**
@@ -21,6 +22,9 @@ class DnsGuardApplication : Application() {
         super.onCreate()
         instance = this
         prefs = Prefs(this)
+        // Master-PIN vault (EncryptedSharedPreferences + BCrypt) must exist
+        // before any UI or the tamper-guard service can consult it.
+        PinVault.init(this)
         createNotificationChannel()
     }
 

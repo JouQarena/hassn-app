@@ -74,6 +74,36 @@
                 android:resource="@xml/accessibility_service_config" />
         </service>
 
+        <!-- Native uninstall friction. User activates via ACTION_ADD_DEVICE_ADMIN;
+             no device-owner or privileged permission is requested. -->
+        <receiver
+            android:name=".receiver.AppDeviceAdminReceiver"
+            android:exported="true"
+            android:label="@string/admin_receiver_label"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin_policies" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Separate from the Reddit-only shield: stays alive to monitor
+             Settings after the Reddit service has called disableSelf(). -->
+        <service
+            android:name=".service.TamperGuardAccessibilityService"
+            android:exported="true"
+            android:label="@string/tamper_guard_service_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/tamper_guard_service_config" />
+        </service>
+
         <!-- Foreground watchdog that polls the foreground package and feeds the
              dashboard's live "Reddit is open" status (no Settings writes). -->
         <service

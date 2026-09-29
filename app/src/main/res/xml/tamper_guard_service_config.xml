@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Configuration for TamperGuardAccessibilityService (Settings anti-tamper
+    guard). Deliberately separate from accessibility_service_config.xml —
+    the Reddit shield and this guard are independent services with opposite
+    lifetime contracts.
+
+    No android:packageNames filter: the guard must work on every OEM skin
+    whose Settings package it can only resolve at runtime. Package scoping is
+    enforced in code (TamperGuardPolicy.classifyPackage) — events from any
+    non-Settings app are dropped before a single node is read.
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged|typeViewClicked"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagReportViewIds|flagRetrieveInteractiveWindows|flagIncludeNotImportantViews"
+    android:canRetrieveWindowContent="true"
+    android:description="@string/tamper_guard_service_description"
+    android:notificationTimeout="150"
+    android:settingsActivity="" />

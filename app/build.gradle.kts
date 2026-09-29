@@ -84,6 +84,15 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("androidx.navigation:navigation-compose:2.8.4")
 
+    // ── Anti-uninstall / anti-tamper protection ─────────────────────────────
+    // EncryptedSharedPreferences: master-key-backed storage for the PIN vault
+    // (Android Keystore AES256-GCM; works fully offline — no INTERNET needed).
+    implementation("androidx.security:security-crypto:1.1.0")
+    // BCrypt password hashing (pure Java, no Android dependency → unit-testable
+    // on the JVM with the real library).
+    implementation("at.favre.lib:bcrypt:0.10.2")
+    testImplementation("at.favre.lib:bcrypt:0.10.2")
+
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.foundation:foundation")

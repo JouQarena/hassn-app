@@ -11,6 +11,7 @@ import android.view.accessibility.AccessibilityManager
 import androidx.core.content.ContextCompat
 import com.dnsguard.shield.service.ShieldAccessibilityService
 import com.dnsguard.shield.service.ShieldWatchdogService
+import com.dnsguard.shield.service.TamperGuardAccessibilityService
 
 /**
  * Centralised, side-effect-free permission/state checks used by the
@@ -49,6 +50,19 @@ object Permissions {
 
     /** True when the watchdog foreground service is currently running. */
     fun isWatchdogRunning(): Boolean = ShieldWatchdogService.isRunning
+
+    /**
+     * True when the user has toggled the Settings anti-tamper guard ON in
+     * Android's Accessibility settings. Same public-API check as
+     * [isShieldServiceEnabled] — the two services are independent toggles.
+     */
+    fun isTamperGuardServiceEnabled(context: Context): Boolean {
+        val manager = context.getSystemService(AccessibilityManager::class.java) ?: return false
+        if (!manager.isEnabled) return false
+        val target = TamperGuardAccessibilityService::class.java.name
+        return manager.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
+            .any { info -> info.id?.contains(target) == true }
+    }
 
     /**
      * True when POST_NOTIFICATIONS is granted; below API 33 the permission does

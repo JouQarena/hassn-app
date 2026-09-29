@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- No device policies are requested. Being an active Device Administrator is
+     enough for Android to block a normal uninstall until deactivation. The
+     app never changes password policy, locks the screen or wipes data. -->
+<device-admin xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-policies />
+</device-admin>

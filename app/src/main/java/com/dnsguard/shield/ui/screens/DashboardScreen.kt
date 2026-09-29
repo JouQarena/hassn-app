@@ -1,6 +1,7 @@
 package com.dnsguard.shield.ui.screens
 
 import android.content.Intent
+import android.app.admin.DevicePolicyManager
 import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -42,6 +43,12 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.dnsguard.shield.LocalLanguageSwitcher
 import com.dnsguard.shield.LocalStrings
+import com.dnsguard.shield.LocalPinGate
+import com.dnsguard.shield.PinGate
+import com.dnsguard.shield.MasterPinDialog
+import com.dnsguard.shield.core.DeviceAdminManager
+import com.dnsguard.shield.core.ProtectionRuntime
+import com.dnsguard.shield.core.security.PinVault
 import com.dnsguard.shield.core.DnsManager
 import com.dnsguard.shield.core.Permissions
 import com.dnsguard.shield.core.ShieldRuntime
@@ -86,9 +93,23 @@ fun DashboardScreen(
     val strings = LocalStrings.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val gate = LocalPinGate.current
+    var showPinManagement by remember { androidx.compose.runtime.mutableStateOf(false) }
+    val protection by ProtectionRuntime.state.collectAsState()
+    // Refresh from DevicePolicyManager on every return from Android's
+    // activation/deactivation consent UI (including a cancelled request).
+    val resumeTick = rememberResumeTick()
+    androidx.compose.runtime.LaunchedEffect(resumeTick) { ProtectionRuntime.refresh(context) }
+    val requestAdmin = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { ProtectionRuntime.refresh(context) }
+
+    if (showPinManagement) {
+        MasterPinDialog(onDismiss = { showPinManagement = false; ProtectionRuntime.refresh(context) })
+    }
+
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val resumeTick = rememberResumeTick()
     var refreshTick by remember { mutableIntStateOf(0) }
     val refreshKey = resumeTick + refreshTick
 
@@ -271,6 +292,53 @@ fun DashboardScreen(
                             }
                         }
                     )
+                }
+            }
+
+            // ── Uninstall Protection card (live Device Admin + PIN status) ─
+            StatusCard(title = "🛡️  ${strings.protectionTitle}") {
+                StatusRow(
+                    dotColor = if (protection.fullyProtected) StatusGreen else WarningOrange,
+                    primaryText = if (protection.fullyProtected) strings.protectionActive
+                        else strings.protectionInactive,
+                    secondaryText = strings.protectionDetail,
+                    primaryColor = if (protection.fullyProtected) StatusGreen else TextPrimary
+                )
+                Spacer(Modifier.height(12.dp))
+                OutlinedButton(onClick = { showPinManagement = true }) {
+                    Text(if (protection.pinSet) strings.protectionChangePin else strings.protectionSetupPin)
+                }
+                if (!protection.adminActive) {
+                    Button(onClick = {
+                        if (!PinVault.isPinSet()) {
+                            showPinManagement = true
+                        } else {
+                            requestAdmin.launch(
+                                DeviceAdminManager.activationIntent(context, strings.adminEnableExplanation)
+                            )
+                        }
+                    }) { Text(strings.protectionActivateAdmin) }
+                } else {
+                    OutlinedButton(onClick = {
+                        gate.request(PinGate.Purpose.DEACTIVATE_ADMIN) {
+                            DeviceAdminManager.deactivate(context)
+                            ProtectionRuntime.refresh(context)
+                        }
+                    }) { Text(strings.protectionDeactivateAdmin) }
+                }
+                Spacer(Modifier.height(8.dp))
+                StatusRow(
+                    dotColor = if (protection.guardServiceEnabled) StatusGreen else WarningOrange,
+                    primaryText = if (protection.guardServiceEnabled) strings.protectionGuardEnabled
+                        else strings.protectionGuardDisabled
+                )
+                if (!protection.guardServiceEnabled) {
+                    OutlinedButton(onClick = {
+                        runCatching { context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
+                    }) { Text(strings.protectionOpenGuardSettings) }
+                }
+                if (PinVault.storageDegraded) {
+                    Text(strings.protectionStorageDegraded, color = WarningOrange)
                 }
             }
 

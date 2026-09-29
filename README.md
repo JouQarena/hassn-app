@@ -33,7 +33,7 @@ the clipboard and opens Android's Private DNS screen — paste it once and Andro
 applies it everywhere (a snackbar confirms the copy).
 
 ### Screen 3 — Setup Guide
-Four numbered steps, every one a **normal Android screen or dialog** — no
+Four core steps plus an optional uninstall-protection step, every one a **normal Android screen or dialog** — no
 computer, no commands, no ADB:
 
 1. **DNS protection** — copy hostname + open the Private DNS dialog
@@ -120,7 +120,7 @@ beyond JDK 17. The debug APK and all reports are uploaded as artifacts.
 # environment variable or a git-ignored local.properties file:
 #     echo "sdk.dir=/path/to/Android/Sdk" > local.properties
 ./gradlew assembleDebug          # APK → app/build/outputs/apk/debug/
-./gradlew testDebugUnitTest      # JVM unit tests (28 tests)
+./gradlew testDebugUnitTest      # JVM unit tests (53 tests)
 ./gradlew lintDebug              # Android Lint
 ```
 
@@ -186,7 +186,8 @@ app/src/main/java/com/dnsguard/shield/
 
 Unit tests live in `app/src/test/…`: `ShieldPolicyTest` (17 safety scenarios),
 `StringsTest` (i18n completeness, compile-enforced by the `Strings` interface),
-`DnsHostnameTest` (hostname validation) — 28 tests total.
+`DnsHostnameTest` (hostname validation), plus `TamperGuardPolicyTest` and
+`PinPolicyTest` (anti-tamper / Master PIN) — 53 tests total.
 
 ## Color palette
 
@@ -214,3 +215,47 @@ Every one of the 36 Material 3 `ColorScheme` slots is written out explicitly in
 
 Provided as-is for personal use. Use responsibly and in accordance with local
 laws and the terms of service of the applications you install it alongside.
+
+---
+
+## Optional uninstall protection (added after the Reddit shield)
+
+The dashboard and Setup Guide now offer an **opt-in** protection flow:
+
+1. Set a Master PIN (4–16 letters/digits). The app stores a salted BCrypt
+   cost-10 hash, not the PIN, in Android Keystore–backed
+   `EncryptedSharedPreferences`. If an OEM Keystore fails, an in-app warning
+   appears and the **hash only** is stored in app-private preferences.
+2. Tap **Activate Device Admin** and confirm on Android's own consent screen.
+   Android will then block a normal launcher/Settings uninstall until the admin
+   is deactivated. The app requests **no device-admin policies** beyond the
+   active-admin status itself (no wipe, lock, or password rules).
+3. Optionally enable **DNS Guard Settings Guard** in Accessibility settings.
+   This is **not** the Reddit shield: it is a separate accessibility service
+   that stays connected for Settings; the Reddit shield still turns itself off
+   immediately outside Reddit. The guard inspects Settings-family windows for
+   our full app label/package name plus destructive controls in English/Arabic.
+   It either presses Back or presents an accessibility-overlay PIN challenge.
+
+The PIN gates the in-app **DNS Settings** route, PIN changes, and the in-app
+**Deactivate protection** button. The admin can still be deactivated from
+Android's own system Settings, and the accessibility guard can be switched
+**off at any time** in Accessibility settings. A successful Settings-overlay
+PIN challenge pauses the guard for **2 minutes**; the in-app deactivation
+challenge pauses it for **10 minutes** so the owner can complete removal.
+The guard does **not** lock down the entire Settings app or prevent a person
+with access to Android Settings from changing Private DNS directly. Android
+can also allow safe mode, factory reset, ADB/device-owner actions or OEM
+uninstall flows that a normal app cannot control. This is **tamper friction**,
+not guaranteed parental control, malware resistance, or an unremovable app.
+
+See `core/TamperGuardPolicy.kt` and `core/security/PinPolicy.kt` for the pure
+security decisions, `service/TamperGuardAccessibilityService.kt` for event
+execution, and their JVM tests for the adversarial matrix. The dependency
+versions are pinned in `app/build.gradle.kts`.
+
+**Baseline repair note:** the upstream revision `31afb46` did not compile:
+`core/AccessibilitySwitch.kt`, `ui/screens/AdbGuideScreen.kt`, and
+`ui/components/CodeBlock.kt` referenced APIs/strings removed by an earlier
+zero-ADB migration. They had no callers in the running app and were removed
+in the local baseline commit before implementing this feature.

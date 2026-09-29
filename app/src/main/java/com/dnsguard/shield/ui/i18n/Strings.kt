@@ -39,6 +39,45 @@ interface Strings {
     val notificationsOptional: String
     val openUsageAccess: String
 
+    // ── Uninstall protection / Master PIN ─────────────────────────────────
+    val protectionTitle: String
+    val protectionActive: String
+    val protectionInactive: String
+    val protectionDetail: String
+    val protectionSetupPin: String
+    val protectionChangePin: String
+    val protectionActivateAdmin: String
+    val protectionDeactivateAdmin: String
+    val protectionOpenGuardSettings: String
+    val protectionGuardEnabled: String
+    val protectionGuardDisabled: String
+    val adminEnableExplanation: String
+    val adminActivatedToast: String
+    val adminDisableWarning: String
+    val adminDeactivatedToast: String
+    val pinDialogSetupTitle: String
+    val pinDialogChangeTitle: String
+    val pinDialogUnlockTitle: String
+    val pinDialogUnlockBody: String
+    val pinDialogUnlockField: String
+    val pinDialogCurrentField: String
+    val pinDialogNewField: String
+    val pinDialogConfirmField: String
+    val pinDialogSaveBtn: String
+    val pinDialogUnlockBtn: String
+    val pinDialogCancelBtn: String
+    val pinDialogErrorWeak: String
+    val pinDialogErrorMismatch: String
+    val pinDialogErrorWrong: String
+    val pinDialogErrorLocked: String
+    val pinDialogSuccess: String
+    val guardOverlayBody: String
+    val guardOverlayLeaveBtn: String
+    val guardOverlayFooter: String
+    val protectionGuideTitle: String
+    val protectionGuideBody: String
+    val protectionStorageDegraded: String
+
     // ── DNS Settings ───────────────────────────────────────────────────────
     val dnsSettingsTitle: String
     val back: String
@@ -94,6 +133,7 @@ interface Strings {
     val notifText: String
     val notifChannelName: String
     val notifChannelDesc: String
+
 }
 
 /** English (default) strings. */
@@ -151,7 +191,7 @@ object EnglishStrings : Strings {
     override val dnsNote = "Set once in Android's Private DNS screen (DNS-over-TLS); this dashboard reads the live value."
 
     override val setupGuideTitle = "Setup Guide"
-    override val setupIntro = "Four one-time steps, all through Android's own screens — no computer, no commands."
+    override val setupIntro = "Four core steps, plus optional uninstall protection — all through Android’s own screens. No computer or commands."
     override val step1Title = "Step 1 — DNS protection"
     override val step1Body = "Copy a hostname and paste it into Android's Private DNS dialog. Android remembers it forever."
     override val step2Title = "Step 2 — Usage access"
@@ -176,6 +216,44 @@ object EnglishStrings : Strings {
     override val notifText = "Shield runs only inside Reddit and shuts off the moment you leave."
     override val notifChannelName = "Shield watchdog"
     override val notifChannelDesc = "Shows the live shield state; the accessibility service only runs while Reddit is in the foreground."
+
+    override val protectionTitle = "Uninstall Protection"
+    override val protectionActive = "Active"
+    override val protectionInactive = "Inactive"
+    override val protectionDetail = "Device Admin blocks a normal uninstall; Master PIN gates changes. Accessibility guard is optional and may be turned off in system Settings."
+    override val protectionSetupPin = "Set Master PIN"
+    override val protectionChangePin = "Change Master PIN"
+    override val protectionActivateAdmin = "Activate Device Admin"
+    override val protectionDeactivateAdmin = "Deactivate protection (PIN)"
+    override val protectionOpenGuardSettings = "Enable Settings guard in Accessibility"
+    override val protectionGuardEnabled = "Settings guard enabled"
+    override val protectionGuardDisabled = "Settings guard off"
+    override val adminEnableExplanation = "Prevents direct uninstall until you deactivate device admin. You can always deactivate it in Android Settings."
+    override val adminActivatedToast = "Device Admin activated"
+    override val adminDisableWarning = "Deactivate DNS Guard administrator? This will allow the app to be uninstalled. If you did not intend this, cancel."
+    override val adminDeactivatedToast = "Device Admin deactivated"
+    override val pinDialogSetupTitle = "Set Master PIN"
+    override val pinDialogChangeTitle = "Change Master PIN"
+    override val pinDialogUnlockTitle = "Master PIN required"
+    override val pinDialogUnlockBody = "Enter your Master PIN to continue."
+    override val pinDialogUnlockField = "Master PIN"
+    override val pinDialogCurrentField = "Current PIN"
+    override val pinDialogNewField = "New PIN"
+    override val pinDialogConfirmField = "Confirm new PIN"
+    override val pinDialogSaveBtn = "Save PIN"
+    override val pinDialogUnlockBtn = "Unlock"
+    override val pinDialogCancelBtn = "Cancel"
+    override val pinDialogErrorWeak = "Use 4–16 letters or digits."
+    override val pinDialogErrorMismatch = "The PINs do not match."
+    override val pinDialogErrorWrong = "Incorrect PIN. %d attempts left."
+    override val pinDialogErrorLocked = "Too many attempts. Try again in %d seconds."
+    override val pinDialogSuccess = "PIN saved."
+    override val guardOverlayBody = "DNS Guard Settings protection: enter your Master PIN or leave this screen."
+    override val guardOverlayLeaveBtn = "Leave Settings"
+    override val guardOverlayFooter = "Authentication pauses the guard briefly so you can complete the operation."
+    override val protectionGuideTitle = "Step 5 — Uninstall protection (optional)"
+    override val protectionGuideBody = "Set a Master PIN, activate Device Admin using Android’s confirmation screen, then enable the separate Settings guard in Accessibility. To remove protection, authenticate with your PIN and deactivate the admin. You can always use Android Settings to disable the admin or accessibility service."
+    override val protectionStorageDegraded = "Encrypted storage unavailable; PIN hash is stored in app-private preferences."
 }
 
 /** Arabic translations (right-to-left). */
@@ -233,7 +311,7 @@ object ArabicStrings : Strings {
     override val dnsNote = "يُضبط مرة واحدة في شاشة DNS الخاص في Android (DNS-over-TLS)؛ تعرض لوحة المعلومات القيمة الحية."
 
     override val setupGuideTitle = "دليل الإعداد"
-    override val setupIntro = "أربع خطوات مرة واحدة، كلها عبر شاشات أندرويد نفسها — بلا حاسوب وبلا أوامر."
+    override val setupIntro = "أربع خطوات أساسية، مع حماية اختيارية لإلغاء التثبيت — كلها عبر شاشات أندرويد نفسها، بلا حاسوب وبلا أوامر."
     override val step1Title = "الخطوة 1 — حماية DNS"
     override val step1Body = "انسخ اسم مضيف والصقه في نافذة DNS الخاص في Android. يتذكره النظام للأبد."
     override val step2Title = "الخطوة 2 — الوصول لبيانات الاستخدام"
@@ -258,6 +336,43 @@ object ArabicStrings : Strings {
     override val notifText = "الدرع يعمل داخل Reddit فقط ويُطفأ لحظة خروجك منه."
     override val notifChannelName = "مراقب الدرع"
     override val notifChannelDesc = "يعرض حالة الدرع الحية؛ خدمة الوصولية تعمل فقط أثناء تواجد Reddit في المقدمة."
+    override val protectionTitle = "حماية إلغاء التثبيت"
+    override val protectionActive = "نشطة"
+    override val protectionInactive = "غير نشطة"
+    override val protectionDetail = "تمنع صلاحية مسؤول الجهاز الإزالة المباشرة؛ تحمي كلمة المرور التغييرات. حارس الإعدادات اختياري ويمكن إيقافه من إعدادات النظام."
+    override val protectionSetupPin = "ضبط الرمز الرئيسي"
+    override val protectionChangePin = "تغيير الرمز الرئيسي"
+    override val protectionActivateAdmin = "تفعيل مسؤول الجهاز"
+    override val protectionDeactivateAdmin = "إيقاف الحماية (بالرمز)"
+    override val protectionOpenGuardSettings = "تفعيل حارس الإعدادات في إمكانية الوصول"
+    override val protectionGuardEnabled = "حارس الإعدادات مفعّل"
+    override val protectionGuardDisabled = "حارس الإعدادات متوقف"
+    override val adminEnableExplanation = "يمنع الإزالة المباشرة حتى تلغي مسؤول الجهاز. يمكنك دائمًا إلغاء تفعيله من إعدادات أندرويد."
+    override val adminActivatedToast = "تم تفعيل مسؤول الجهاز"
+    override val adminDisableWarning = "هل تريد إلغاء مسؤول DNS Guard؟ سيصبح حذف التطبيق ممكنًا. ألغِ إذا لم تقصد ذلك."
+    override val adminDeactivatedToast = "تم إلغاء مسؤول الجهاز"
+    override val pinDialogSetupTitle = "ضبط الرمز الرئيسي"
+    override val pinDialogChangeTitle = "تغيير الرمز الرئيسي"
+    override val pinDialogUnlockTitle = "الرمز الرئيسي مطلوب"
+    override val pinDialogUnlockBody = "أدخل الرمز الرئيسي للمتابعة."
+    override val pinDialogUnlockField = "الرمز الرئيسي"
+    override val pinDialogCurrentField = "الرمز الحالي"
+    override val pinDialogNewField = "الرمز الجديد"
+    override val pinDialogConfirmField = "تأكيد الرمز الجديد"
+    override val pinDialogSaveBtn = "حفظ الرمز"
+    override val pinDialogUnlockBtn = "فتح"
+    override val pinDialogCancelBtn = "إلغاء"
+    override val pinDialogErrorWeak = "استخدم ٤ إلى ١٦ حرفًا أو رقمًا."
+    override val pinDialogErrorMismatch = "الرمزان غير متطابقين."
+    override val pinDialogErrorWrong = "رمز خاطئ. تبقّت %d محاولات."
+    override val pinDialogErrorLocked = "محاولات كثيرة. حاول بعد %d ثانية."
+    override val pinDialogSuccess = "تم حفظ الرمز."
+    override val guardOverlayBody = "حماية إعدادات DNS Guard: أدخل الرمز الرئيسي أو غادر هذه الشاشة."
+    override val guardOverlayLeaveBtn = "مغادرة الإعدادات"
+    override val guardOverlayFooter = "تتوقف المراقبة مؤقتًا بعد المصادقة لإكمال العملية."
+    override val protectionGuideTitle = "الخطوة ٥ — حماية إلغاء التثبيت (اختيارية)"
+    override val protectionGuideBody = "اضبط رمزًا رئيسيًا وفعّل مسؤول الجهاز عبر شاشة التأكيد في أندرويد، ثم فعّل حارس الإعدادات المنفصل في إمكانية الوصول. للإزالة، تحقق بالرمز وألغِ المسؤول. يمكنك دائمًا تعطيل المسؤول أو خدمة إمكانية الوصول من إعدادات أندرويد."
+    override val protectionStorageDegraded = "تعذر التخزين المشفر؛ حُفظ تجزئة الرمز في تفضيلات التطبيق الخاصة."
 }
 
 /** Resolves the string bundle for a language. */

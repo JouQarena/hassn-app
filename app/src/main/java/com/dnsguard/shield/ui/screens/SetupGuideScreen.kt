@@ -47,6 +47,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dnsguard.shield.LocalStrings
+import com.dnsguard.shield.LocalPinGate
+import com.dnsguard.shield.PinGate
+import com.dnsguard.shield.MasterPinDialog
+import com.dnsguard.shield.core.DeviceAdminManager
+import com.dnsguard.shield.core.ProtectionRuntime
+import com.dnsguard.shield.core.security.PinVault
 import com.dnsguard.shield.core.DnsManager
 import com.dnsguard.shield.core.Permissions
 import com.dnsguard.shield.service.ShieldWatchdogService
@@ -65,7 +71,7 @@ import kotlinx.coroutines.launch
 /**
  * Screen 3 — Setup Guide (standard mode, zero commands).
  *
- * Four one-time steps, every one of them a normal Android screen or dialog —
+ * Four core steps plus an optional uninstall-protection step, all normal Android screens —
  * the exact replacement for the old ADB command list:
  *
  *  1. DNS protection  → copy hostname + open Private DNS dialog
@@ -83,10 +89,24 @@ fun SetupGuideScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val clipboard = LocalClipboardManager.current
+    val pinGate = LocalPinGate.current
+
+    var showPinManagement by remember { androidx.compose.runtime.mutableStateOf(false) }
+    if (showPinManagement) MasterPinDialog(onDismiss = {
+        showPinManagement = false
+        ProtectionRuntime.refresh(context)
+    })
+    val requestAdmin = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { ProtectionRuntime.refresh(context) }
 
     val refreshKey = rememberResumeTick()
     var refreshTick by remember { mutableIntStateOf(0) }
     val refreshAll = refreshKey + refreshTick
+
+    androidx.compose.runtime.LaunchedEffect(refreshAll) { ProtectionRuntime.refresh(context) }
+    val adminActive = remember(refreshAll) { DeviceAdminManager.isAdminActive(context) }
+    val pinSet = remember(refreshAll) { PinVault.isPinSet() }
 
     val dnsOk = remember(refreshAll) { DnsManager.currentStatus(context).isActive }
     val usageOk = remember(refreshAll) { Permissions.hasUsageStats(context) }
@@ -156,14 +176,19 @@ fun SetupGuideScreen(onBack: () -> Unit) {
                 done = dnsOk,
                 buttonLabel = strings.dnsCopyOpenBtn,
                 onButtonClick = {
-                    val host = DnsManager.currentStatus(context).specifier
-                        ?: "family.adguard-dns.com"
-                    clipboard.setText(AnnotatedString(host))
-                    DnsManager.openPrivateDnsSettings(context)
-                    scope.launch {
-                        snackbarHostState.showSnackbar(strings.dnsAppliedMessage.format(host))
+                    val openDns: () -> Unit = {
+                        val host = DnsManager.currentStatus(context).specifier
+                            ?: "family.adguard-dns.com"
+                        clipboard.setText(AnnotatedString(host))
+                        DnsManager.openPrivateDnsSettings(context)
+                        scope.launch {
+                            snackbarHostState.showSnackbar(strings.dnsAppliedMessage.format(host))
+                        }
+                        refreshTick++
                     }
-                    refreshTick++
+                    if (PinVault.isPinSet()) {
+                        pinGate.request(PinGate.Purpose.DNS_SETTINGS, openDns)
+                    } else openDns()
                 }
             )
 
@@ -211,6 +236,28 @@ fun SetupGuideScreen(onBack: () -> Unit) {
                     } else {
                         ShieldWatchdogService.start(context)
                         refreshTick++
+                    }
+                }
+            )
+
+            // ── Step 5: optional native uninstall protection ────────────
+            StepCard(
+                number = 5,
+                title = strings.protectionGuideTitle,
+                body = strings.protectionGuideBody,
+                done = adminActive && pinSet,
+                buttonLabel = if (!pinSet) strings.protectionSetupPin
+                    else if (!adminActive) strings.protectionActivateAdmin
+                    else strings.protectionOpenGuardSettings,
+                onButtonClick = {
+                    when {
+                        !pinSet -> showPinManagement = true
+                        !adminActive -> requestAdmin.launch(
+                            DeviceAdminManager.activationIntent(context, strings.adminEnableExplanation)
+                        )
+                        else -> runCatching {
+                            context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                        }
                     }
                 }
             )

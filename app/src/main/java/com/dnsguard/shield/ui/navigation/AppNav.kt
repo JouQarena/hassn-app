@@ -13,6 +13,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.dnsguard.shield.LocalPinGate
+import com.dnsguard.shield.PinGate
+import com.dnsguard.shield.core.security.PinVault
 import com.dnsguard.shield.ui.screens.DashboardScreen
 import com.dnsguard.shield.ui.screens.DnsSettingsScreen
 import com.dnsguard.shield.ui.screens.SetupGuideScreen
@@ -29,19 +32,37 @@ object Routes {
  */
 @Composable
 fun DnsGuardNavHost(navController: NavHostController = rememberNavController()) {
+    val gate = LocalPinGate.current
     NavHost(navController = navController, startDestination = Routes.DASHBOARD) {
 
         composable(Routes.DASHBOARD) {
             DashboardScreen(
-                onOpenDnsSettings = { navController.navigate(Routes.DNS_SETTINGS) },
+                onOpenDnsSettings = {
+                    if (PinVault.isPinSet()) {
+                        gate.request(PinGate.Purpose.DNS_SETTINGS) {
+                            navController.navigate(Routes.DNS_SETTINGS)
+                        }
+                    } else navController.navigate(Routes.DNS_SETTINGS)
+                },
                 onOpenSetupGuide = { navController.navigate(Routes.SETUP_GUIDE) }
             )
         }
 
         composable(Routes.DNS_SETTINGS) {
-            DnsSettingsScreen(
-                onBack = { navController.popBackStack() }
-            )
+            if (PinVault.isPinSet() && !gate.dnsUnlocked) {
+                // Fail closed on a restored deep navigation stack: an unlock
+                // held only in memory cannot survive rotation/process death.
+                androidx.compose.runtime.LaunchedEffect(Unit) {
+                    navController.popBackStack()
+                }
+            } else {
+                DnsSettingsScreen(
+                    onBack = {
+                        gate.clearDnsUnlock()
+                        navController.popBackStack()
+                    }
+                )
+            }
         }
 
         composable(Routes.SETUP_GUIDE) {

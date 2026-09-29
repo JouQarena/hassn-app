@@ -8,4 +8,7 @@
 <resources>
     <string name="accessibility_service_label">درع Reddit الخاص بـ DNS Guard</string>
     <string name="accessibility_service_description">يراقب تطبيق Reddit الرسمي ويحجب محتوى NSFW خلف طبقة حجب عندما يكون Reddit في المقدمة. للأمان، تُلغي الخدمة نفسها من خدمات الوصولية المفعّلة لحظة ظهور أي تطبيق آخر — بما فيها تطبيقات البنوك — فلا تعمل أبدًا فوق أي شيء سوا Reddit.</string>
+    <string name="admin_receiver_label">حماية حذف DNS Guard</string>
+    <string name="tamper_guard_service_label">حارس إعدادات DNS Guard</string>
+    <string name="tamper_guard_service_description">يفحص شاشات إعدادات أندرويد فقط عند محاولة تعديل أو حذف DNS Guard. يعرض طلب الرمز أو يعود من الإجراء المدمر. خدمة اختيارية منفصلة عن درع Reddit.</string>
 </resources>

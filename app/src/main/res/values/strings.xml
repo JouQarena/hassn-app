@@ -6,4 +6,7 @@
     <!-- Accessibility service (shown inside Android Settings → Accessibility) -->
     <string name="accessibility_service_label">DNS Guard Reddit Shield</string>
     <string name="accessibility_service_description">Watches for the official Reddit app and hides NSFW posts behind a shield overlay while Reddit is in the foreground. For safety, this service removes itself from the enabled accessibility services the instant any other app — including banking apps — appears, so it never runs over anything except Reddit.</string>
+    <string name="admin_receiver_label">DNS Guard Uninstall Protection</string>
+    <string name="tamper_guard_service_label">DNS Guard Settings Guard</string>
+    <string name="tamper_guard_service_description">Checks only Android Settings screens for attempts to modify or remove DNS Guard. Shows a PIN challenge or goes back on destructive actions. This is optional and independent of the Reddit shield.</string>
 </resources>
