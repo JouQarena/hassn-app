@@ -1,36 +1,43 @@
 package com.dnsguard.shield.core
 
+import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.Intent
 import android.provider.Settings
+import android.util.Log
 import com.dnsguard.shield.util.DnsHostname
 
 /**
- * Read/write access to Android's system-wide *Private DNS* setting.
+ * Access to Android's system-wide *Private DNS* setting.
  *
- * Android stores two `Settings.Global` keys (they are hidden from the public
- * SDK, hence the literal names):
- *  - `private_dns_mode`        → "off" | "opportunistic" | "hostname"
- *  - `private_dns_specifier`   → the DoT hostname when mode == "hostname"
+ * Standard mode (zero ADB): the app **reads** the current configuration to
+ * power the dashboard (reads need no special permission) and for writes it
+ * deep-links the user into Android's own Private DNS screen — the same
+ * one-time paste flow every command-free DNS app uses. The OS persists the
+ * hostname forever after that.
  *
- * Writing them requires `WRITE_SECURE_SETTINGS` (granted over adb — see the
- * in-app ADB Setup Guide).
+ * (Writing `private_dns_mode` / `private_dns_specifier` directly would need
+ * the ADB-only WRITE_SECURE_SETTINGS permission, which this mode never uses.)
  */
 object DnsManager {
+
+    private const val TAG = "DnsManager"
 
     const val KEY_PRIVATE_DNS_MODE = "private_dns_mode"
     const val KEY_PRIVATE_DNS_SPECIFIER = "private_dns_specifier"
 
-    const val MODE_OFF = "off"
     const val MODE_OPPORTUNISTIC = "opportunistic"
     const val MODE_HOSTNAME = "hostname"
+
+    /** Undocumented-but-stable action that opens the Private DNS dialog. */
+    const val ACTION_PRIVATE_DNS_SETTINGS = "android.settings.PRIVATE_DNS_SETTINGS"
 
     /** A single preset offered on the DNS settings screen. */
     data class DnsPreset(
         val id: String,
         val name: String,
         val description: String,
-        /** Null → applies the "Automatic" (opportunistic) mode. */
-        val hostname: String?
+        val hostname: String
     )
 
     /** The presets rendered on the settings screen, in display order. */
@@ -40,19 +47,17 @@ object DnsManager {
         unfilteredName: String, unfilteredDesc: String,
         cloudflareName: String, cloudflareDesc: String,
         cloudflareFamilyName: String, cloudflareFamilyDesc: String,
-        quad9Name: String, quad9Desc: String,
-        automaticName: String, automaticDesc: String
+        quad9Name: String, quad9Desc: String
     ): List<DnsPreset> = listOf(
         DnsPreset("adguard_family", familyName, familyDesc, "family.adguard-dns.com"),
         DnsPreset("adguard", adguardName, adguardDesc, "dns.adguard-dns.com"),
         DnsPreset("adguard_unfiltered", unfilteredName, unfilteredDesc, "unfiltered.adguard-dns.com"),
         DnsPreset("cloudflare", cloudflareName, cloudflareDesc, "one.one.one.one"),
         DnsPreset("cloudflare_family", cloudflareFamilyName, cloudflareFamilyDesc, "security.cloudflare-dns.com"),
-        DnsPreset("quad9", quad9Name, quad9Desc, "dns.quad9.net"),
-        DnsPreset("automatic", automaticName, automaticDesc, null)
+        DnsPreset("quad9", quad9Name, quad9Desc, "dns.quad9.net")
     )
 
-    /** Snapshot of the current system Private DNS configuration. */
+    /** Snapshot of the current system Private DNS configuration (read-only). */
     data class DnsStatus(
         val mode: String,
         val specifier: String?
@@ -75,31 +80,27 @@ object DnsManager {
     }
 
     /**
-     * Applies an explicit Private DNS hostname.
+     * Opens Android's Private DNS screen (preferred) or, on OEM skins that do
+     * not expose it, the wireless/network settings page where Private DNS can
+     * still be reached. The caller is expected to have copied the hostname
+     * to the clipboard first.
      *
-     * @return true when both settings were written successfully, false when the
-     *         app lacks `WRITE_SECURE_SETTINGS` or the value was rejected.
+     * @return the action label that was actually opened, for diagnostics.
      */
-    fun applyHostname(context: Context, hostname: String): Boolean {
-        val normalized = DnsHostname.normalize(hostname)
-        if (!DnsHostname.isValid(normalized)) return false
-        val resolver = context.contentResolver
-        val specifierWritten = Settings.Global.putString(
-            resolver, KEY_PRIVATE_DNS_SPECIFIER, normalized
-        )
-        val modeWritten = Settings.Global.putString(
-            resolver, KEY_PRIVATE_DNS_MODE, MODE_HOSTNAME
-        )
-        return specifierWritten && modeWritten
+    fun openPrivateDnsSettings(context: Context): String = try {
+        context.startActivity(Intent(ACTION_PRIVATE_DNS_SETTINGS))
+        "PRIVATE_DNS_SETTINGS"
+    } catch (e: ActivityNotFoundException) {
+        Log.w(TAG, "PRIVATE_DNS_SETTINGS not exposed, falling back to wireless settings", e)
+        try {
+            context.startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS))
+            "WIRELESS_SETTINGS"
+        } catch (e2: ActivityNotFoundException) {
+            Log.e(TAG, "No settings screen available", e2)
+            "NONE"
+        }
     }
 
-    /**
-     * Switches back to Android's automatic (opportunistic) Private DNS mode.
-     *
-     * @return true when the mode was written successfully.
-     */
-    fun applyAutomatic(context: Context): Boolean {
-        val resolver = context.contentResolver
-        return Settings.Global.putString(resolver, KEY_PRIVATE_DNS_MODE, MODE_OPPORTUNISTIC)
-    }
+    /** Validates a user-supplied hostname before it goes on the clipboard. */
+    fun isValidHostname(candidate: String): Boolean = DnsHostname.isValid(candidate)
 }

@@ -1,5 +1,8 @@
 package com.dnsguard.shield.ui.screens
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -48,7 +51,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dnsguard.shield.LocalStrings
 import com.dnsguard.shield.core.DnsManager
-import com.dnsguard.shield.core.Permissions
 import com.dnsguard.shield.ui.components.Badge
 import com.dnsguard.shield.ui.components.SectionHeading
 import com.dnsguard.shield.ui.components.StatusCard
@@ -69,18 +71,15 @@ import com.dnsguard.shield.util.DnsHostname
 import kotlinx.coroutines.launch
 
 /**
- * Screen 2 — DNS Settings.
+ * Screen 2 — DNS Settings (standard mode, zero commands).
  *
- * Radio-list of vetted presets (AdGuard Family is the default product choice),
- * a validated free-form hostname field, and an Apply button that writes Android's
- * Private DNS keys via `WRITE_SECURE_SETTINGS`.
+ * Selecting a preset or typing a hostname **copies it to the clipboard and
+ * opens Android's own Private DNS dialog** — the one-time paste flow that
+ * needs no ADB. The dashboard keeps reading the live system value.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DnsSettingsScreen(
-    onBack: () -> Unit,
-    onOpenAdbGuide: () -> Unit
-) {
+fun DnsSettingsScreen(onBack: () -> Unit) {
     val strings = LocalStrings.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -88,7 +87,6 @@ fun DnsSettingsScreen(
 
     val refreshKey = rememberResumeTick()
     val currentStatus = remember(refreshKey) { DnsManager.currentStatus(context) }
-    val hasSecureSettings = remember(refreshKey) { Permissions.hasWriteSecureSettings(context) }
 
     val presets = remember(strings) {
         DnsManager.presets(
@@ -103,18 +101,15 @@ fun DnsSettingsScreen(
             cloudflareFamilyName = strings.presetCloudflareFamilyName,
             cloudflareFamilyDesc = strings.presetCloudflareFamilyDesc,
             quad9Name = strings.presetQuad9Name,
-            quad9Desc = strings.presetQuad9Desc,
-            automaticName = strings.presetAutomaticName,
-            automaticDesc = strings.presetAutomaticDesc
+            quad9Desc = strings.presetQuad9Desc
         )
     }
 
     // Pre-select the preset that matches the currently active hostname.
-    var selectedId by remember(refreshKey) {
+    var selectedId by remember(refreshKey, presets) {
         val active = currentStatus.specifier
         mutableStateOf(
-            presets.firstOrNull { it.hostname != null && it.hostname == active }?.id
-                ?: presets.last().id
+            presets.firstOrNull { it.hostname == active }?.id ?: presets.first().id
         )
     }
     var customHostname by remember(refreshKey) {
@@ -122,35 +117,18 @@ fun DnsSettingsScreen(
     }
     var errorText by remember { mutableStateOf<String?>(null) }
 
-    fun apply(hostname: String?) {
-        if (!hasSecureSettings) {
-            errorText = strings.errorNoSecureSettings
-            return
-        }
-        if (hostname == null) {
-            val ok = DnsManager.applyAutomatic(context)
-            if (ok) {
-                errorText = null
-                scope.launch {
-                    snackbarHostState.showSnackbar(strings.dnsAutomaticAppliedMessage)
-                }
-            }
-            return
-        }
-        if (!DnsHostname.isValid(hostname)) {
+    fun copyAndOpen(hostname: String) {
+        val normalized = DnsHostname.normalize(hostname)
+        if (!DnsHostname.isValid(normalized)) {
             errorText = strings.errorInvalidHostname
             return
         }
-        val ok = DnsManager.applyHostname(context, hostname)
-        if (ok) {
-            errorText = null
-            scope.launch {
-                snackbarHostState.showSnackbar(
-                    strings.dnsAppliedMessage.format(DnsHostname.normalize(hostname))
-                )
-            }
-        } else {
-            errorText = strings.errorNoSecureSettings
+        errorText = null
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText("Private DNS hostname", normalized))
+        val opened = DnsManager.openPrivateDnsSettings(context)
+        scope.launch {
+            snackbarHostState.showSnackbar(strings.dnsAppliedMessage.format(normalized) + " ($opened)")
         }
     }
 
@@ -236,11 +214,11 @@ fun DnsSettingsScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                .clickable {
-                    selectedId = preset.id
-                    customHostname = preset.hostname.orEmpty()
-                    errorText = null
-                },
+                        .clickable {
+                            selectedId = preset.id
+                            customHostname = preset.hostname
+                            errorText = null
+                        },
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = if (selected) BorderAndInputBg else CardSurface
@@ -259,7 +237,7 @@ fun DnsSettingsScreen(
                             selected = selected,
                             onClick = {
                                 selectedId = preset.id
-                                customHostname = preset.hostname.orEmpty()
+                                customHostname = preset.hostname
                                 errorText = null
                             },
                             colors = RadioButtonDefaults.colors(
@@ -278,14 +256,12 @@ fun DnsSettingsScreen(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = TextSecondary
                             )
-                            if (preset.hostname != null) {
-                                Text(
-                                    text = preset.hostname,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontFamily = FontFamily.Monospace,
-                                    color = AccentLightBlue
-                                )
-                            }
+                            Text(
+                                text = preset.hostname,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontFamily = FontFamily.Monospace,
+                                color = AccentLightBlue
+                            )
                         }
                     }
                 }
@@ -326,14 +302,14 @@ fun DnsSettingsScreen(
                 shape = RoundedCornerShape(8.dp)
             )
 
-            // ── Apply ─────────────────────────────────────────────────────
+            // ── Copy & open Android's Private DNS dialog ──────────────────
             Button(
                 onClick = {
                     val typed = customHostname.trim()
                     if (typed.isEmpty()) {
-                        apply(null)
+                        errorText = strings.errorInvalidHostname
                     } else {
-                        apply(typed)
+                        copyAndOpen(typed)
                     }
                 },
                 modifier = Modifier
@@ -345,23 +321,7 @@ fun DnsSettingsScreen(
                     contentColor = PureWhite
                 )
             ) {
-                Text(text = strings.applyButton, fontSize = 16.sp)
-            }
-
-            if (!hasSecureSettings) {
-                Button(
-                    onClick = onOpenAdbGuide,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = BorderAndInputBg,
-                        contentColor = PrimaryBlue
-                    )
-                ) {
-                    Text(text = strings.openAdbGuide, fontSize = 15.sp)
-                }
+                Text(text = strings.dnsCopyOpenBtn, fontSize = 16.sp)
             }
 
             Spacer(modifier = Modifier.height(8.dp))

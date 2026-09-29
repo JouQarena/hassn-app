@@ -3,27 +3,25 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!--
-        WRITE_SECURE_SETTINGS:
-        Lets the app write Android's Private DNS hostname and toggle the global
-        accessibility flag. Android only grants this permission through an
-        `adb shell pm grant` command (see the in-app ADB Setup Guide).
+        Standard mode — every permission here is granted through Android's own
+        screens, never ADB:
 
         PACKAGE_USAGE_STATS:
-        Lets the foreground watchdog observe which application is currently in the
-        foreground (required so the accessibility shield can be armed for Reddit
-        only). Granted through the Usage Access settings screen or via adb appops.
+        Lets the watchdog observe which application is in the foreground (the
+        dashboard shows "Reddit is open right now"). Granted by the user through
+        the normal Usage Access settings screen.
 
         RECEIVE_BOOT_COMPLETED:
-        Restarts the watchdog after a device reboot so the shield keeps enforcing
-        its "disabled except while Reddit is in the foreground" guarantee.
+        Restarts the watchdog after a device reboot.
 
         FOREGROUND_SERVICE / FOREGROUND_SERVICE_SPECIAL_USE / POST_NOTIFICATIONS:
         Standard requirements for the long-running watchdog service on modern
         Android versions.
+
+        WRITE_SECURE_SETTINGS is deliberately NOT declared: this build never
+        writes Settings.Secure — the accessibility shield removes its own
+        component (disableSelf) instead. See core/ShieldPolicy.kt.
     -->
-    <uses-permission
-        android:name="android.permission.WRITE_SECURE_SETTINGS"
-        tools:ignore="ProtectedPermissions" />
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
@@ -57,11 +55,11 @@
         </activity>
 
         <!--
-            The accessibility shield. The manifest declares it normally; it is
-            *connected* by the system only while the watchdog has written
-            `Settings.Secure.ACCESSIBILITY_ENABLED = 1`, which it does exclusively
-            during the exact seconds when `com.reddit.frontpage` is the foreground
-            application. See ShieldWatchdogService for the full state machine.
+            The accessibility shield. The user enables it the normal way
+            (Settings → Accessibility); from then on the service enforces the
+            banking-safety rule itself by calling disableSelf() the instant any
+            package other than `com.reddit.frontpage` owns the screen.
+            See core/ShieldPolicy.kt for the state machine.
         -->
         <service
             android:name=".service.ShieldAccessibilityService"
@@ -76,15 +74,15 @@
                 android:resource="@xml/accessibility_service_config" />
         </service>
 
-        <!-- Foreground watchdog that polls the foreground package and flips the
-             accessibility master switch on/off around Reddit sessions. -->
+        <!-- Foreground watchdog that polls the foreground package and feeds the
+             dashboard's live "Reddit is open" status (no Settings writes). -->
         <service
             android:name=".service.ShieldWatchdogService"
             android:exported="false"
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Continuous monitoring of the foreground application so the accessibility shield can be enabled only while the official Reddit app is open, and forced back to Settings.Secure.ACCESSIBILITY_ENABLED=0 the moment it is not." />
+                android:value="Continuous observation of the foreground application so the dashboard can report live shield state; the accessibility shield itself only ever runs while the official Reddit app is in the foreground." />
         </service>
 
         <!-- exported=false still receives system broadcasts (BOOT_COMPLETED is
@@ -98,5 +96,17 @@
         </receiver>
 
     </application>
+
+    <!-- Package visibility (API 30+): lets the service resolve the device's
+         real Settings and launcher packages for its GRACE window. -->
+    <queries>
+        <intent>
+            <action android:name="android.settings.SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.HOME" />
+        </intent>
+    </queries>
 
 </manifest>

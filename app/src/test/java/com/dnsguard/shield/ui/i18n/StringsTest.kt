@@ -8,6 +8,13 @@ import kotlin.test.assertTrue
 
 class StringsTest {
 
+    // NOTE on the threshold: the table legitimately shrank when the ADB flow
+    // was replaced by the zero-command Setup Guide (no command labels, no
+    // verify block). Completeness across languages is enforced at COMPILE
+    // TIME by the Strings interface; the numeric floor only guards against
+    // accidentally gutting the table during future edits.
+    private val expectedMinimumStrings = 60
+
     @Test
     fun `english is the default language`() {
         assertEquals(AppLanguage.EN, AppLanguage.fromCode(null))
@@ -33,7 +40,10 @@ class StringsTest {
         val bundles = listOf(EnglishStrings, ArabicStrings)
         for (bundle in bundles) {
             val textProperties = Strings::class.memberProperties
-            assertTrue(textProperties.size >= 70, "expected a comprehensive string table")
+            assertTrue(
+                textProperties.size >= expectedMinimumStrings,
+                "expected a comprehensive string table, found ${textProperties.size}"
+            )
             for (property in textProperties) {
                 if (property.name == "language") continue
                 val value = property.get(bundle) as? String
@@ -53,8 +63,8 @@ class StringsTest {
             ArabicStrings.shieldActivatesSubtitle
         )
         assertNotEquals(
-            EnglishStrings.adbGuideTitle,
-            ArabicStrings.adbGuideTitle
+            EnglishStrings.setupGuideTitle,
+            ArabicStrings.setupGuideTitle
         )
         assertNotEquals(
             EnglishStrings.overlayRevealButton,
@@ -72,8 +82,9 @@ class StringsTest {
     }
 
     @Test
-    fun `command constants stay pinned to the application id`() {
-        assertEquals("EN", EnglishStrings.language.code)
-        assertTrue(EnglishStrings.adbIntro.contains("USB"))
+    fun `zero-command promise is stated in the guide copy`() {
+        assertTrue(EnglishStrings.setupIntro.contains("no computer, no commands"))
+        assertTrue(ArabicStrings.setupIntro.contains("بلا حاسوب"))
+        assertTrue(EnglishStrings.step3Body.contains("DNS Guard Reddit Shield"))
     }
 }

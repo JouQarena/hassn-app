@@ -1,6 +1,7 @@
 package com.dnsguard.shield.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -12,19 +13,19 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.dnsguard.shield.ui.screens.AdbGuideScreen
 import com.dnsguard.shield.ui.screens.DashboardScreen
 import com.dnsguard.shield.ui.screens.DnsSettingsScreen
+import com.dnsguard.shield.ui.screens.SetupGuideScreen
 
 /** Route table for the three screens in the wireframe set. */
 object Routes {
     const val DASHBOARD = "dashboard"
     const val DNS_SETTINGS = "dns_settings"
-    const val ADB_GUIDE = "adb_guide"
+    const val SETUP_GUIDE = "setup_guide"
 }
 
 /**
- * App navigation graph: Dashboard → DNS Settings / ADB Guide (and back).
+ * App navigation graph: Dashboard → DNS Settings / Setup Guide (and back).
  */
 @Composable
 fun DnsGuardNavHost(navController: NavHostController = rememberNavController()) {
@@ -33,19 +34,18 @@ fun DnsGuardNavHost(navController: NavHostController = rememberNavController()) 
         composable(Routes.DASHBOARD) {
             DashboardScreen(
                 onOpenDnsSettings = { navController.navigate(Routes.DNS_SETTINGS) },
-                onOpenAdbGuide = { navController.navigate(Routes.ADB_GUIDE) }
+                onOpenSetupGuide = { navController.navigate(Routes.SETUP_GUIDE) }
             )
         }
 
         composable(Routes.DNS_SETTINGS) {
             DnsSettingsScreen(
-                onBack = { navController.popBackStack() },
-                onOpenAdbGuide = { navController.navigate(Routes.ADB_GUIDE) }
+                onBack = { navController.popBackStack() }
             )
         }
 
-        composable(Routes.ADB_GUIDE) {
-            AdbGuideScreen(onBack = { navController.popBackStack() })
+        composable(Routes.SETUP_GUIDE) {
+            SetupGuideScreen(onBack = { navController.popBackStack() })
         }
     }
 }
@@ -58,7 +58,7 @@ fun DnsGuardNavHost(navController: NavHostController = rememberNavController()) 
 fun rememberResumeTick(): Int {
     var tick by remember { mutableIntStateOf(0) }
     val owner = LocalLifecycleOwner.current
-    androidx.compose.runtime.DisposableEffect(owner) {
+    DisposableEffect(owner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) tick++
         }

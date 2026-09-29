@@ -4,6 +4,8 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.app.usage.UsageEvents
+import android.app.usage.UsageStatsManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -11,13 +13,12 @@ import android.content.IntentFilter
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
-import android.provider.Settings
 import android.util.Log
 import androidx.core.content.ContextCompat
 import com.dnsguard.shield.DnsGuardApplication
 import com.dnsguard.shield.R
-import com.dnsguard.shield.core.AccessibilitySwitch
 import com.dnsguard.shield.core.Permissions
+import com.dnsguard.shield.core.ShieldPolicy
 import com.dnsguard.shield.core.ShieldRuntime
 import com.dnsguard.shield.ui.i18n.AppLanguage
 import com.dnsguard.shield.ui.i18n.stringsFor
@@ -29,30 +30,22 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import android.app.usage.UsageEvents
-import android.app.usage.UsageStatsManager
 
 /**
- * Foreground watchdog — the *only* component in the app that ever turns the
- * global accessibility switch ON, and it does so exclusively while
- * `com.reddit.frontpage` is the foreground application.
+ * Foreground watchdog — the app's status observer in **standard mode**
+ * (zero ADB, no `Settings.Secure` writes anywhere).
  *
- * ```
- * poll every 750 ms ──► foreground == com.reddit.frontpage (screen on)
- *                        │
- *                        ├─ yes → ENABLED_ACCESSIBILITY_SERVICES += our service
- *                        │        ACCESSIBILITY_ENABLED = 1
- *                        │
- *                        └─ no  → ACCESSIBILITY_ENABLED = 0   (immediately)
- * ```
+ * What it still does:
+ *  - polls the foreground package via `UsageStatsManager` (granted through
+ *    Android's normal Usage Access screen) and feeds `ShieldRuntime` so the
+ *    dashboard can say "Reddit is open right now";
+ *  - keeps a low-importency notification showing the live shield state;
+ *  - stays alive so the process is ready the moment the user opens Reddit.
  *
- * Screen-off is treated as "not in the foreground": the receiver below forces
- * the switch to 0 without waiting for the next poll, and polls never re-enable
- * while the display is off.
- *
- * If `PACKAGE_USAGE_STATS` is missing the watchdog *cannot* prove Reddit is in
- * front, so it keeps the switch at 0 forever — the failure direction is always
- * the safe one.
+ * What it deliberately no longer does: flip `ACCESSIBILITY_ENABLED`. That
+ * needs the ADB-only WRITE_SECURE_SETTINGS permission; in standard mode the
+ * accessibility service itself removes its component (disableSelf) the instant
+ * Reddit is not in front — see [ShieldPolicy].
  */
 class ShieldWatchdogService : Service() {
 
@@ -61,9 +54,6 @@ class ShieldWatchdogService : Service() {
 
     @Volatile
     private var screenInteractive = true
-
-    @Volatile
-    private var redditForeground = false
 
     private var powerReceiver: BroadcastReceiver? = null
 
@@ -92,63 +82,16 @@ class ShieldWatchdogService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
-    // ── Core state machine ─────────────────────────────────────────────────
+    // ── Core observation loop ─────────────────────────────────────────────
 
     private fun evaluateOnce() {
-        // Without Usage Access we can never *prove* Reddit is in front → stay off.
-        if (!Permissions.hasUsageStats(this)) {
-            forceOffIfNecessary()
-            ShieldRuntime.markIncomplete()
-            return
-        }
+        val canObserve = screenInteractive && Permissions.hasUsageStats(this)
+        val foreground = if (canObserve) queryForegroundPackage() else null
+        val redditVisible = foreground == ShieldPolicy.REDDIT_PACKAGE
 
-        // Display off ⇒ Reddit is not "in the foreground" for our purposes.
-        if (!screenInteractive) {
-            forceOffIfNecessary()
-            redditForeground = false
-            updateRuntimePhase()
-            return
-        }
-
-        val foreground = queryForegroundPackage()
-        if (foreground == AccessibilitySwitch.REDDIT_PACKAGE) {
-            if (!redditForeground || !isMasterEnabled()) {
-                val enabled = AccessibilitySwitch.enableForReddit(this)
-                Log.i(TAG, "Reddit detected → ACCESSIBILITY_ENABLED=${if (enabled) 1 else "0 (WRITE_SECURE_SETTINGS missing)"}")
-            }
-            redditForeground = true
-        } else {
-            if (redditForeground || isMasterEnabled()) {
-                Log.i(TAG, "Foreground is ${foreground ?: "unknown"} → forcing ACCESSIBILITY_ENABLED=0")
-            }
-            forceOffIfNecessary()
-            redditForeground = false
-        }
-        updateRuntimePhase()
+        // Feeds the dashboard ("Reddit open now") and demotes a stale ACTIVE.
+        ShieldRuntime.setRedditVisible(redditVisible && canObserve)
     }
-
-    private fun updateRuntimePhase() {
-        if (!Permissions.shieldPrerequisitesMet(this)) {
-            ShieldRuntime.markIncomplete()
-            return
-        }
-        val redditShieldLive = redditForeground && isMasterEnabled()
-        if (!redditShieldLive) {
-            ShieldRuntime.markStandby()
-        }
-        // When the shield IS live we deliberately leave the flow untouched:
-        // the accessibility service flips it to ACTIVE_IN_REDDIT on connect,
-        // and only it can flip it back when Reddit goes away.
-    }
-
-    private fun forceOffIfNecessary() {
-        AccessibilitySwitch.forceDisable(this)
-    }
-
-    private fun isMasterEnabled(): Boolean =
-        Settings.Secure.getInt(
-            contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED, 0
-        ) == 1
 
     /**
      * Reconstructs the current foreground package from the usage-events ring
@@ -156,7 +99,7 @@ class ShieldWatchdogService : Service() {
      *
      * MOVE_TO_FOREGROUND/BACKGROUND are deprecated in favour of
      * ACTIVITY_RESUMED/PAUSED, but those constants only exist on API 29+ while
-     * this app supports API 26 — both pairs share the same values.
+     * this app supports API 28 — both pairs share the same values.
      */
     @Suppress("DEPRECATION")
     private fun queryForegroundPackage(): String? {
@@ -182,7 +125,7 @@ class ShieldWatchdogService : Service() {
         return current
     }
 
-    // ── Power / screen transitions ─────────────────────────────────────────
+    // ── Power / screen transitions ────────────────────────────────────────
 
     private fun registerPowerReceiver() {
         val receiver = object : BroadcastReceiver() {
@@ -190,9 +133,7 @@ class ShieldWatchdogService : Service() {
                 when (intent?.action) {
                     Intent.ACTION_SCREEN_OFF -> {
                         screenInteractive = false
-                        redditForeground = false
-                        forceOffIfNecessary()
-                        ShieldRuntime.markStandby()
+                        ShieldRuntime.setRedditVisible(false)
                     }
                     Intent.ACTION_SCREEN_ON -> {
                         screenInteractive = true
@@ -210,7 +151,7 @@ class ShieldWatchdogService : Service() {
         }
     }
 
-    // ── Foreground notification ────────────────────────────────────────────
+    // ── Foreground notification ───────────────────────────────────────────
 
     private fun startAsForeground() {
         val notification = buildNotification()
@@ -260,7 +201,7 @@ class ShieldWatchdogService : Service() {
             .build()
     }
 
-    // ── Teardown ───────────────────────────────────────────────────────────
+    // ── Teardown ──────────────────────────────────────────────────────────
 
     override fun onDestroy() {
         isRunning = false
@@ -268,10 +209,7 @@ class ShieldWatchdogService : Service() {
         scope.cancel()
         powerReceiver?.let { runCatching { unregisterReceiver(it) } }
         powerReceiver = null
-        // Watchdog gone ⇒ nobody can vouch for Reddit being in front ⇒ off.
-        AccessibilitySwitch.forceDisable(this)
-        redditForeground = false
-        ShieldRuntime.markIncomplete()
+        ShieldRuntime.setRedditVisible(false)
         super.onDestroy()
     }
 

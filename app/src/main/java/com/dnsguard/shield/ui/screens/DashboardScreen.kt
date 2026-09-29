@@ -28,12 +28,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -46,9 +46,9 @@ import com.dnsguard.shield.core.DnsManager
 import com.dnsguard.shield.core.Permissions
 import com.dnsguard.shield.core.ShieldRuntime
 import com.dnsguard.shield.service.ShieldWatchdogService
+import com.dnsguard.shield.ui.components.PermissionRow
 import com.dnsguard.shield.ui.components.StatusCard
 import com.dnsguard.shield.ui.components.StatusRow
-import com.dnsguard.shield.ui.components.PermissionRow
 import com.dnsguard.shield.ui.navigation.rememberResumeTick
 import com.dnsguard.shield.ui.theme.AccentLightBlue
 import com.dnsguard.shield.ui.theme.AppBackground
@@ -65,22 +65,23 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * Screen 1 — Main Dashboard.
+ * Screen 1 — Main Dashboard (standard mode, zero commands).
  *
  * Reproduces the wireframe exactly:
  *  - TopAppBar #0D47A1 with "🛡️ DNS Guard & Shield" and the "🌐 EN" toggle
  *  - Background #121212
  *  - DNS Protection card (green/red dot + hostname in #64B5F6)
- *  - Reddit NSFW Shield card (green dot + "Activates only when Reddit…")
- *  - Permissions card with clickable ✅ / ⚠️ rows
+ *  - Reddit NSFW Shield card (armed / active / disabled states)
+ *  - Permissions card with clickable ✅ / ⚠️ rows — every one of them
+ *    granted through a normal Android screen (no ADB anywhere)
  *  - Full-width primary "⚙️ DNS Settings" button (#1E88E5)
- *  - Full-width outlined "💻 ADB Setup Guide" button (#2C2C2C)
+ *  - Full-width outlined "💻 Setup Guide" button (#2C2C2C)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     onOpenDnsSettings: () -> Unit,
-    onOpenAdbGuide: () -> Unit
+    onOpenSetupGuide: () -> Unit
 ) {
     val strings = LocalStrings.current
     val context = LocalContext.current
@@ -91,21 +92,18 @@ fun DashboardScreen(
     var refreshTick by remember { mutableIntStateOf(0) }
     val refreshKey = resumeTick + refreshTick
 
-    // Live shield phase from the watchdog / accessibility service.
-    val shieldPhase by ShieldRuntime.state.collectAsState()
+    // Live shield phase from the accessibility service / watchdog.
+    val shieldSnapshot by ShieldRuntime.state.collectAsState()
 
     // Snapshots that only change on resume / explicit actions.
     val dnsStatus = remember(refreshKey) { DnsManager.currentStatus(context) }
-    val hasSecureSettings = remember(refreshKey) { Permissions.hasWriteSecureSettings(context) }
+    val shieldEnabled = remember(refreshKey) { Permissions.isShieldServiceEnabled(context) }
     val hasUsageStats = remember(refreshKey) { Permissions.hasUsageStats(context) }
     val watchdogRunning = remember(refreshKey) { ShieldWatchdogService.isRunning }
 
     val notificationPermissionGranted = remember(refreshKey) {
         Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
-            ContextCompat.checkSelfPermission(
-                context,
-                android.Manifest.permission.POST_NOTIFICATIONS
-            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            Permissions.hasNotificationPermission(context)
     }
 
     val requestNotifications = rememberLauncherForActivityResult(
@@ -129,17 +127,23 @@ fun DashboardScreen(
         }
     }
 
-    val shieldPrerequisites = hasSecureSettings && hasUsageStats && watchdogRunning
-    val shieldActiveInReddit = shieldPhase.phase == ShieldRuntime.Phase.ACTIVE_IN_REDDIT
-    val shieldDotColor = when {
-        !shieldPrerequisites -> WarningOrange
-        shieldActiveInReddit -> StatusGreen
-        else -> StatusGreen
-    }
-    val shieldPrimary = when {
-        !shieldPrerequisites -> strings.shieldIncomplete
-        shieldActiveInReddit -> strings.shieldActiveNow
-        else -> strings.shieldArmed
+    // ── Shield card state machine (display only) ──────────────────────────
+    val shieldActiveInReddit =
+        shieldSnapshot.phase == ShieldRuntime.Phase.ACTIVE_IN_REDDIT
+    val (shieldDotColor, shieldPrimary, shieldSecondary) = when {
+        !shieldEnabled ->
+            Triple(
+                WarningOrange,
+                strings.shieldDisabled,
+                if (shieldSnapshot.redditVisible) strings.shieldRedditOpenNow
+                else strings.shieldActivatesSubtitle
+            )
+        !watchdogRunning ->
+            Triple(WarningOrange, strings.shieldIncomplete, strings.shieldActivatesSubtitle)
+        shieldActiveInReddit ->
+            Triple(StatusGreen, strings.shieldActiveNow, strings.shieldActivatesSubtitle)
+        else ->
+            Triple(StatusGreen, strings.shieldArmed, strings.shieldActivatesSubtitle)
     }
 
     Scaffold(
@@ -204,7 +208,7 @@ fun DashboardScreen(
                 StatusRow(
                     dotColor = shieldDotColor,
                     primaryText = shieldPrimary,
-                    secondaryText = strings.shieldActivatesSubtitle
+                    secondaryText = shieldSecondary
                 )
             }
 
@@ -212,16 +216,23 @@ fun DashboardScreen(
             StatusCard(title = "🔐  ${strings.permissionsStatus}") {
                 Column {
                     PermissionRow(
-                        label = strings.permSecureSettings,
-                        granted = hasSecureSettings,
-                        statusText = if (hasSecureSettings) strings.permGranted else strings.permNeedsAdb,
+                        label = strings.permShieldService,
+                        granted = shieldEnabled,
+                        statusText = if (shieldEnabled) strings.permGranted else strings.permTapToFix,
                         onClick = {
-                            if (hasSecureSettings) {
+                            if (shieldEnabled) {
                                 scope.launch {
                                     snackbarHostState.showSnackbar(strings.permGranted)
                                 }
                             } else {
-                                onOpenAdbGuide()
+                                runCatching {
+                                    context.startActivity(
+                                        Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                                    )
+                                }
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(strings.armHint)
+                                }
                             }
                         }
                     )
@@ -282,7 +293,7 @@ fun DashboardScreen(
             }
 
             OutlinedButton(
-                onClick = onOpenAdbGuide,
+                onClick = onOpenSetupGuide,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
@@ -294,7 +305,7 @@ fun DashboardScreen(
                 )
             ) {
                 Text(
-                    text = strings.adbGuideButton,
+                    text = strings.setupGuideButton,
                     fontSize = 16.sp
                 )
             }

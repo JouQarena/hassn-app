@@ -7,5 +7,5 @@
 -->
 <resources>
     <string name="accessibility_service_label">درع Reddit الخاص بـ DNS Guard</string>
-    <string name="accessibility_service_description">يراقب تطبيق Reddit الرسمي ويحجب محتوى NSFW خلف طبقة حجب عندما يكون Reddit في المقدمة. للأمان، تُعطَّل هذه الخدمة (Settings.Secure.ACCESSIBILITY_ENABLED = 0) في كل لحظة أخرى — لا تعمل أبدًا أثناء فتح أي تطبيق آخر، بما فيها تطبيقات البنوك.</string>
+    <string name="accessibility_service_description">يراقب تطبيق Reddit الرسمي ويحجب محتوى NSFW خلف طبقة حجب عندما يكون Reddit في المقدمة. للأمان، تُلغي الخدمة نفسها من خدمات الوصولية المفعّلة لحظة ظهور أي تطبيق آخر — بما فيها تطبيقات البنوك — فلا تعمل أبدًا فوق أي شيء سوا Reddit.</string>
 </resources>

@@ -5,5 +5,5 @@
 
     <!-- Accessibility service (shown inside Android Settings → Accessibility) -->
     <string name="accessibility_service_label">DNS Guard Reddit Shield</string>
-    <string name="accessibility_service_description">Watches for the official Reddit app and hides NSFW posts behind a shield overlay while Reddit is in the foreground. For safety, this service is force-disabled (Settings.Secure.ACCESSIBILITY_ENABLED = 0) at every other moment — it never runs while any other app, including banking apps, is open.</string>
+    <string name="accessibility_service_description">Watches for the official Reddit app and hides NSFW posts behind a shield overlay while Reddit is in the foreground. For safety, this service removes itself from the enabled accessibility services the instant any other app — including banking apps — appears, so it never runs over anything except Reddit.</string>
 </resources>
