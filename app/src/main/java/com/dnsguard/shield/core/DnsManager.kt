@@ -98,25 +98,9 @@ object DnsManager {
         context.checkSelfPermission(android.Manifest.permission.WRITE_SECURE_SETTINGS) ==
             android.content.pm.PackageManager.PERMISSION_GRANTED
 
-    /**
-     * Restores the hostname selected in the app when it differs from Android's
-     * current Private DNS value. Returns true when already correct or restored.
-     */
-    fun enforceProtectedHostname(context: Context, hostname: String): Boolean {
-        if (!DnsHostname.isValid(hostname) || !canWriteSecureSettings(context)) return false
-        val current = currentStatus(context)
-        if (current.mode == MODE_HOSTNAME && current.specifier == hostname) return true
-        val resolver = context.contentResolver
-        val specifierWritten = Settings.Global.putString(
-            resolver, KEY_PRIVATE_DNS_SPECIFIER, hostname
-        )
-        val modeWritten = Settings.Global.putString(
-            resolver, KEY_PRIVATE_DNS_MODE, MODE_HOSTNAME
-        )
-        return specifierWritten && modeWritten && currentStatus(context).let {
-            it.mode == MODE_HOSTNAME && it.specifier == hostname
-        }
-    }
+    /** Suspended compatibility entry point; always performs writes on IO. */
+    suspend fun enforceProtectedHostname(context: Context, hostname: String): Boolean =
+        DnsEnforcer.enforce(context, hostname)
 
     /** Validates a user-supplied hostname before it goes on the clipboard. */
     fun isValidHostname(candidate: String): Boolean = DnsHostname.isValid(candidate)

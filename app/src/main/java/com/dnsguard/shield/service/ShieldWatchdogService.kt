@@ -4,6 +4,10 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.database.ContentObserver
+import android.os.Handler
+import android.os.Looper
+import android.provider.Settings
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.BroadcastReceiver
@@ -18,6 +22,7 @@ import androidx.core.content.ContextCompat
 import com.dnsguard.shield.DnsGuardApplication
 import com.dnsguard.shield.R
 import com.dnsguard.shield.core.DnsManager
+import com.dnsguard.shield.core.DnsEnforcer
 import com.dnsguard.shield.core.Permissions
 import com.dnsguard.shield.core.ShieldPolicy
 import com.dnsguard.shield.core.ShieldRuntime
@@ -31,6 +36,8 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Foreground watchdog. It observes the foreground package for dashboard state
@@ -42,6 +49,14 @@ class ShieldWatchdogService : Service() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var pollJob: Job? = null
 
+    // Every Settings.Global read/write runs off the UI thread. The mutex
+    // serializes observer events with periodic fallback checks.
+    private val dnsScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val dnsMutex = Mutex()
+    private val observerHandler = Handler(Looper.getMainLooper())
+    private var dnsObserver: ContentObserver? = null
+    private var pendingDnsCheck: Runnable? = null
+
     @Volatile
     private var screenInteractive = true
 
@@ -51,6 +66,7 @@ class ShieldWatchdogService : Service() {
         super.onCreate()
         isRunning = true
         registerPowerReceiver()
+        registerDnsObserver()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -82,13 +98,9 @@ class ShieldWatchdogService : Service() {
         // Feeds the dashboard ("Reddit open now") and demotes a stale ACTIVE.
         ShieldRuntime.setRedditVisible(redditVisible && canObserve)
 
-        // WRITE_SECURE_SETTINGS is granted once through ADB. Never invent a
-        // default here: only enforce a hostname the user selected in the app.
-        DnsGuardApplication.prefs().protectedDnsHostname?.let { hostname ->
-            if (!DnsManager.enforceProtectedHostname(this, hostname)) {
-                Log.d(TAG, "Private DNS enforcement unavailable or unsuccessful")
-            }
-        }
+        // Fallback poll in case an OEM does not deliver ContentObserver
+        // callbacks. Do not block the usage-stats loop with a binder write.
+        launchDnsCheck()
     }
 
     /**
@@ -121,6 +133,62 @@ class ShieldWatchdogService : Service() {
             }
         }
         return current
+    }
+
+    // ── Private DNS change observer ───────────────────────────────────────
+
+    private fun registerDnsObserver() {
+        val observer = object : ContentObserver(observerHandler) {
+            override fun onChange(selfChange: Boolean) {
+                // Android can report our own writes twice (mode + specifier).
+                // Debounce the burst, then read and compare both values on IO;
+                // a mismatch enforces the *latest saved* target immediately.
+                scheduleDnsCheck(immediate = false)
+            }
+        }
+        runCatching {
+            contentResolver.registerContentObserver(
+                Settings.Global.getUriFor(DnsManager.KEY_PRIVATE_DNS_MODE), false, observer
+            )
+            contentResolver.registerContentObserver(
+                Settings.Global.getUriFor(DnsManager.KEY_PRIVATE_DNS_SPECIFIER), false, observer
+            )
+            dnsObserver = observer
+            scheduleDnsCheck(immediate = true)
+        }.onFailure {
+            // Avoid leaving the first URI registered if registering the
+            // second failed. The 750 ms poll remains as a fallback.
+            runCatching { contentResolver.unregisterContentObserver(observer) }
+            Log.w(TAG, "Private DNS observer unavailable; poll remains active", it)
+        }
+    }
+
+    private fun scheduleDnsCheck(immediate: Boolean) {
+        if (immediate) {
+            launchDnsCheck()
+        } else {
+            pendingDnsCheck?.let(observerHandler::removeCallbacks)
+            val task = Runnable {
+                pendingDnsCheck = null
+                launchDnsCheck()
+            }
+            pendingDnsCheck = task
+            observerHandler.postDelayed(task, DNS_OBSERVER_DEBOUNCE_MS)
+        }
+    }
+
+    private fun launchDnsCheck() {
+        dnsScope.launch(Dispatchers.IO) {
+            dnsMutex.withLock {
+                val target = runCatching { DnsGuardApplication.prefs().protectedDnsHostname }
+                    .getOrNull() ?: return@withLock
+                // Re-read inside the mutex. An observer event caused by our
+                // own write should become a no-op; changes while a write is
+                // in flight are checked by the next observer/poll iteration.
+                val restored = DnsEnforcer.enforce(this@ShieldWatchdogService, target)
+                if (!restored) Log.w(TAG, "Private DNS mismatch; restore failed (check ADB grant)")
+            }
+        }
     }
 
     // ── Power / screen transitions ────────────────────────────────────────
@@ -204,7 +272,12 @@ class ShieldWatchdogService : Service() {
     override fun onDestroy() {
         isRunning = false
         pollJob?.cancel()
+        pendingDnsCheck?.let(observerHandler::removeCallbacks)
+        pendingDnsCheck = null
+        dnsObserver?.let { runCatching { contentResolver.unregisterContentObserver(it) } }
+        dnsObserver = null
         scope.cancel()
+        dnsScope.cancel()
         powerReceiver?.let { runCatching { unregisterReceiver(it) } }
         powerReceiver = null
         ShieldRuntime.setRedditVisible(false)
@@ -215,6 +288,7 @@ class ShieldWatchdogService : Service() {
         private const val TAG = "ShieldWatchdog"
         private const val NOTIFICATION_ID = 4711
         private const val POLL_INTERVAL_MS = 750L
+        private const val DNS_OBSERVER_DEBOUNCE_MS = 100L
         private const val LOOKBACK_MS = 10_000L
 
         @Volatile

@@ -7,7 +7,7 @@ with a **Reddit-only NSFW accessibility shield** — built entirely with
 
 | Concern | Guarantee |
 | --- | --- |
-| DNS protection | Android Private DNS (DNS-over-TLS) pinned to a vetted hostname (default `family.adguard-dns.com`); applied through Android's **own Private DNS dialog** — the app copies the hostname and deep-links you there, so it needs **no** `WRITE_SECURE_SETTINGS` and **no** `INTERNET` permission |
+| DNS protection | Android Private DNS (DNS-over-TLS), with the selected hostname persisted by the app. After the optional ADB grant of `WRITE_SECURE_SETTINGS`, a foreground service restores changes on an I/O coroutine via a debounced `ContentObserver` plus a poll fallback. Without that grant it cannot write Private DNS; no `INTERNET` permission is needed. |
 | Reddit NSFW shield | The accessibility service overlays NSFW content **only** while `com.reddit.frontpage` is in the foreground |
 | Banking-app safety | The shield **removes itself from Android's enabled-accessibility-services the instant any other app appears** (or the screen turns off, or a 30-second grace window expires without Reddit) — enforced by a unit-tested state machine plus an independent watchdog. It never writes `Settings.Secure` at all |
 | Data egress | The app declares **no `INTERNET` permission** — nothing ever leaves the device |
@@ -120,7 +120,7 @@ beyond JDK 17. The debug APK and all reports are uploaded as artifacts.
 # environment variable or a git-ignored local.properties file:
 #     echo "sdk.dir=/path/to/Android/Sdk" > local.properties
 ./gradlew assembleDebug          # APK → app/build/outputs/apk/debug/
-./gradlew testDebugUnitTest      # JVM unit tests (53 tests)
+./gradlew testDebugUnitTest      # JVM unit tests (57 tests)
 ./gradlew lintDebug              # Android Lint
 ```
 
@@ -163,7 +163,8 @@ app/src/main/java/com/dnsguard/shield/
 ├── DnsGuardApplication.kt        # notification channel + process-wide prefs
 ├── MainActivity.kt               # Compose host, language provider
 ├── core/
-│   ├── DnsManager.kt             # read-only Private DNS status + deep-link
+│   ├── DnsManager.kt             # Private DNS status + Settings deep-link
+│   ├── DnsEnforcer.kt            # IO-only writes, mode + specifier verification
 │   ├── Permissions.kt            # side-effect-free permission checks
 │   ├── Prefs.kt                  # language persistence
 │   ├── ShieldPolicy.kt           # pure FSM: STANDBY(grace) → ACTIVE → DEAD
@@ -171,8 +172,8 @@ app/src/main/java/com/dnsguard/shield/
 ├── receiver/
 │   └── BootCompletedReceiver.kt  # watchdog restart after reboot
 ├── service/
-│   ├── ShieldAccessibilityService.kt  # Reddit-only, self-disabling (disableSelf)
-│   ├── ShieldWatchdogService.kt       # 750 ms observer-only foreground poll
+│   ├── ShieldAccessibilityService.kt  # Reddit-only NSFW overlay + settings toggle guard
+│   ├── ShieldWatchdogService.kt       # Reddit foreground poll + Private DNS observer
 │   └── overlay/NsfwOverlay.kt         # TYPE_ACCESSIBILITY_OVERLAY shield
 ├── ui/
 │   ├── components/               # StatusCard, StatusDot, …
@@ -187,7 +188,8 @@ app/src/main/java/com/dnsguard/shield/
 Unit tests live in `app/src/test/…`: `ShieldPolicyTest` (17 safety scenarios),
 `StringsTest` (i18n completeness, compile-enforced by the `Strings` interface),
 `DnsHostnameTest` (hostname validation), plus `TamperGuardPolicyTest` and
-`PinPolicyTest` (anti-tamper / Master PIN) — 53 tests total.
+`PinPolicyTest` (anti-tamper / Master PIN), `DnsEnforcerTest` and
+`RedditTogglePolicyTest` — 57 tests total.
 
 ## Color palette
 
@@ -259,3 +261,24 @@ versions are pinned in `app/build.gradle.kts`.
 `ui/components/CodeBlock.kt` referenced APIs/strings removed by an earlier
 zero-ADB migration. They had no callers in the running app and were removed
 in the local baseline commit before implementing this feature.
+
+
+### Private DNS restoration and Reddit setting toggles
+
+The Android components are named `DnsEnforcer`, `ShieldWatchdogService`, and
+`ShieldAccessibilityService` (rather than `GuardForegroundService` and
+`RedditAccessibilityService`). The watchdog registers a `ContentObserver` on
+`private_dns_mode` and `private_dns_specifier`. Changes are coalesced for 100 ms;
+the 750 ms poll is a fallback. A single I/O mutex serializes checks and writes
+the saved hostname followed by strict `hostname` mode, then verifies both
+values. Failed writes are logged, not reported as restored. This depends on an
+ADB grant of `WRITE_SECURE_SETTINGS`; without it no ordinary app can restore
+Private DNS automatically. Android may stop the foreground service or revoke
+the grant, so restoration cannot be guaranteed.
+
+The Reddit service watches window/content/click events only for
+`com.reddit.frontpage`. When a supported adult-content label appears beside a
+CHECKED switch/checkbox in a small parent row, it clicks that control OFF and
+backs out; it never clicks an unchecked control. Reddit post labels without
+nearby toggles still use the NSFW overlay. UI behavior varies by Reddit version
+and OEM, so an on-device check is needed in addition to JVM tests.
